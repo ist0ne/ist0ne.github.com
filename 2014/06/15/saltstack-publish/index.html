@@ -129,6 +129,28 @@
   </div>
 </article>
 
+  
+
+	<section id="comment" class="comment">
+		<div id="gitment"></div>
+	</section>
+	<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+	<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+	<script>
+		var gitment = new Gitment({
+			owner: 'ist0ne',
+			repo: 'https://github.com/ist0ne/gitment.git',
+			oauth: {
+				client_id: 'a3a5af94aef00fdf0c24',
+				client_secret: '3d47316b6b7d0b98ba405da19a65457357256f2d',
+			},
+		})
+		gitment.render('gitment')
+	</script>
+
+
+
+
 
     </main>
 
