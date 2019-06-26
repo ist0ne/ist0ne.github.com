@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Puppet: sudo模块 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="介绍puppet自制sudo模块">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Puppet: sudo模块">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Puppet: sudo模块</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/05/14/puppet-sudo-module/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-14T02:00:00.000Z">
+          2014-05-14
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>本文介绍puppet sudo模块，用来管理Linux (RedHat)上的/etc/sudoers文件。模块实现批量添加、删除用户sudo权限。</p>
+<p>github地址：<a href="https://github.com/ist0ne/puppet-sudo" target="_blank" rel="noopener">https://github.com/ist0ne/puppet-sudo</a></p>
+<h2 id="1、描述"><a href="#1、描述" class="headerlink" title="1、描述"></a>1、描述</h2><p>本模块依赖<a href="https://github.com/puppetlabs/puppetlabs-stdlib" target="_blank" rel="noopener">puppetlabs-stdlib</a>，实现用户批量sudo权限的添加。</p>
+<h2 id="2、用法"><a href="#2、用法" class="headerlink" title="2、用法"></a>2、用法</h2><p>添加用户和组：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo &#123; [<span class="string">'user1'</span>, <span class="string">'user2'</span>]: &#125;</span><br></pre></td></tr></table></figure>
+<p>/etc/sudoers会添加如下行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">user1    FILESERVERS=(ALL)    NOPASSWD: ALL</span><br><span class="line">user2    FILESERVERS=(ALL)    NOPASSWD: ALL</span><br></pre></td></tr></table></figure>
+<p>删除用户和组：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo &#123;[<span class="string">'user1'</span>, <span class="string">'user2'</span>]: <span class="keyword">ensure</span> =&gt; absent&#125;</span><br></pre></td></tr></table></figure>
+<p>使用别名添加ADMINS组：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">sudo &#123; <span class="string">'ADMINS'</span><span class="symbol">:</span></span><br><span class="line">    <span class="keyword">ensure</span> =&gt; present,</span><br><span class="line">    alias_hash =&gt; &#123;</span><br><span class="line">        <span class="string">'ADMINS'</span> =&gt; &#123;</span><br><span class="line">            <span class="keyword">ensure</span>        =&gt; present,</span><br><span class="line">            alias_type    =&gt; <span class="string">'User_Alias'</span>,</span><br><span class="line">            alias_name    =&gt; <span class="string">'ADMINS'</span>,</span><br><span class="line">            alias_content =&gt; <span class="string">'jsmith, mikem, jobs'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">'FILESERVERS'</span> =&gt; &#123;</span><br><span class="line">            <span class="keyword">ensure</span>        =&gt; present,</span><br><span class="line">            alias_type    =&gt; <span class="string">'Host_Alias'</span>,</span><br><span class="line">            alias_name    =&gt; <span class="string">'FILESERVERS'</span>,</span><br><span class="line">            alias_content =&gt; <span class="string">'fs1, fs2'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    machine =&gt; <span class="string">'FILESERVERS'</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面命令会添加如下行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ADMINS  FILESERVERS=(ALL)       NOPASSWD: ALL</span><br><span class="line">User_Alias ADMINS = jsmith, mikem, <span class="built_in">jobs</span></span><br><span class="line">Host_Alias FILESERVERS = fs1, fs2</span><br></pre></td></tr></table></figure>
+<p>删除以上建立的别名只需将ensure都改为absent：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">sudo &#123; <span class="string">'ADMINS'</span><span class="symbol">:</span></span><br><span class="line">    <span class="keyword">ensure</span> =&gt; absent,</span><br><span class="line">    alias_hash =&gt; &#123;</span><br><span class="line">        <span class="string">'ADMINS'</span> =&gt; &#123;</span><br><span class="line">            <span class="keyword">ensure</span>        =&gt; absent,</span><br><span class="line">            alias_type    =&gt; <span class="string">'User_Alias'</span>,</span><br><span class="line">            alias_name    =&gt; <span class="string">'ADMINS'</span>,</span><br><span class="line">            alias_content =&gt; <span class="string">'jsmith, mikem, jobs'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">'FILESERVERS'</span> =&gt; &#123;</span><br><span class="line">            <span class="keyword">ensure</span>        =&gt; absent,</span><br><span class="line">            alias_type    =&gt; <span class="string">'Host_Alias'</span>,</span><br><span class="line">            alias_name    =&gt; <span class="string">'FILESERVERS'</span>,</span><br><span class="line">            alias_content =&gt; <span class="string">'fs1, fs2'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    machine =&gt; <span class="string">'FILESERVERS'</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3、模块代码解析"><a href="#3、模块代码解析" class="headerlink" title="3、模块代码解析"></a>3、模块代码解析</h2><p>sudo的定义用到了create_resources函数，这个函数使用一个hash结构创建资源。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">define sudo (</span><br><span class="line">  $ensure            = present,</span><br><span class="line">  $alias_hash        = <span class="string">'unset'</span>,</span><br><span class="line">  $machine           = <span class="string">'ALL'</span>,</span><br><span class="line">  $commands          = <span class="string">'(ALL)'</span>,</span><br><span class="line">  $nopasswd          = <span class="literal">true</span>,</span><br><span class="line">  $nopasswd_commands = <span class="string">'ALL'</span>,</span><br><span class="line">  $sudo_file         = <span class="string">'sudoers'</span>,</span><br><span class="line">  $sudo_file_path    = <span class="string">'/etc'</span></span><br><span class="line">) &#123;</span><br><span class="line"></span><br><span class="line">  validate_re($ensure, [present, absent])</span><br><span class="line">  validate_string($machine)</span><br><span class="line">  validate_string($commands)</span><br><span class="line">  validate_bool($nopasswd)</span><br><span class="line">  validate_string($nopasswd_commands)</span><br><span class="line">  validate_string($sudo_file)</span><br><span class="line">  validate_absolute_path($sudo_file_path)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ($alias_hash != <span class="string">'unset'</span>) &#123;</span><br><span class="line">    create_resources(<span class="string">'sudo::alias'</span>, $alias_hash)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> $nopasswd == <span class="literal">true</span> &#123;</span><br><span class="line">    $nopwd = <span class="string">'NOPASSWD'</span></span><br><span class="line">    $line = <span class="string">"$name  $machine=$commands  $&#123;nopwd&#125;: $nopasswd_commands"</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    $line = <span class="string">"$name  $machine=$commands  $commands"</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  exec &#123; <span class="string">"test_user_exist_$name"</span><span class="symbol">:</span></span><br><span class="line">    command =&gt; <span class="string">"sed -i '/^$name[[:space:]]/d' $&#123;sudo_file_path&#125;/$&#123;sudo_file&#125;"</span>,</span><br><span class="line">    onlyif  =&gt; <span class="string">"grep \'^$name[[:space:]]\' $&#123;sudo_file_path&#125;/$&#123;sudo_file&#125; &gt;/dev/null &amp;&amp; cat $&#123;sudo_file_path&#125;/$&#123;sudo_file&#125; |grep \'^$name[[:space:]]\' |grep -v \'^$line\$\' &gt;/dev/null"</span>,</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  file_line &#123; <span class="string">"$name"</span><span class="symbol">:</span></span><br><span class="line">    <span class="keyword">ensure</span> =&gt; $ensure,</span><br><span class="line">    line   =&gt; $line,</span><br><span class="line">    path   =&gt; <span class="string">"$&#123;sudo_file_path&#125;/$&#123;sudo_file&#125;"</span>,</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Exec[<span class="string">"test_user_exist_$name"</span>] -&gt; File_line[<span class="string">"$name"</span>]</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>sudo::alias定义如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">define sudo::<span class="keyword">alias</span> (</span><br><span class="line">  $ensure         = present,</span><br><span class="line">  $alias_type     = <span class="keyword">undef</span>,</span><br><span class="line">  $alias_name     = <span class="keyword">undef</span>,</span><br><span class="line">  $alias_content  = <span class="keyword">undef</span>,</span><br><span class="line">  $sudo_file      = <span class="string">'sudoers'</span>,</span><br><span class="line">  $sudo_file_path = <span class="string">'/etc'</span></span><br><span class="line">) &#123;</span><br><span class="line"></span><br><span class="line">  validate_re($ensure, [present, absent])</span><br><span class="line">  validate_re($alias_type, [<span class="string">'Host_Alias'</span>, <span class="string">'User_Alias'</span>, <span class="string">'Cmnd_Alias'</span>])</span><br><span class="line">  validate_string($alias_name)</span><br><span class="line">  validate_string($alias_content)</span><br><span class="line">  validate_string($sudo_file)</span><br><span class="line">  validate_absolute_path($sudo_file_path)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ! ($ensure <span class="keyword">in</span> [present, absent]) &#123;</span><br><span class="line">    fail(<span class="string">'ensure parameter must be present or absent'</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ! ($alias_type <span class="keyword">in</span> [<span class="string">'Host_Alias'</span>, <span class="string">'User_Alias'</span>, <span class="string">'Cmnd_Alias'</span>]) &#123;</span><br><span class="line">    fail(<span class="string">'alias_type parameter must be "Host_Alias" or "User_Alias" or "Cmnd_Alias"'</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ($alias_type != <span class="keyword">undef</span> <span class="keyword">and</span> $alias_name != <span class="keyword">undef</span> <span class="keyword">and</span> $alias_content != <span class="keyword">undef</span>) &#123;</span><br><span class="line">    $alias_line = <span class="string">"$alias_type $alias_name = $alias_content"</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ($alias_line != <span class="keyword">undef</span>) &#123;</span><br><span class="line">    exec &#123; <span class="string">"test_alias_exist_$name"</span><span class="symbol">:</span></span><br><span class="line">      command =&gt; <span class="string">"sed -i '/^$alias_type $alias_name[[:space:]]/d' $&#123;sudo_file_path&#125;/$&#123;sudo_file&#125;"</span>,</span><br><span class="line">      onlyif  =&gt; <span class="string">"grep \'^$alias_type[[:space:]]$alias_name[[:space:]]\' $&#123;sudo_file_path&#125;/$&#123;sudo_file&#125; &gt;/dev/null &amp;&amp; cat $&#123;sudo_file_path&#125;/$&#123;sudo_file&#125; |grep \'^$alias_type[[:space:]]$alias_name[[:space:]]\' |grep -v \'^$alias_line\$\' &gt;/dev/null"</span>,</span><br><span class="line">    &#125;</span><br><span class="line">    file_line &#123; <span class="string">"alias_$name"</span><span class="symbol">:</span></span><br><span class="line">      <span class="keyword">ensure</span> =&gt; $ensure,</span><br><span class="line">      line   =&gt; $alias_line,</span><br><span class="line">      path   =&gt; <span class="string">"$&#123;sudo_file_path&#125;/$&#123;sudo_file&#125;"</span>,</span><br><span class="line">    &#125;</span><br><span class="line">  Exec[<span class="string">"test_alias_exist_$name"</span>] -&gt; File_line[<span class="string">"alias_$name"</span>]</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/Puppet/">Puppet</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/puppet/">puppet</a><a href="/tags/devops/">devops</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    <br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

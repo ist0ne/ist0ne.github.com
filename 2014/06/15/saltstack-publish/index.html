@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Saltstack：代码部署系统搭建 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="本文以一个小的电商网站（www.mall.com）为例，讲述Saltstack在真实场景中的应用。">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Saltstack：代码部署系统搭建">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Saltstack：代码部署系统搭建</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/06/15/saltstack-publish/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-06-15T02:00:00.000Z">
+          2014-06-15
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>部署系统基于Salt Runner编写，Salt Runner使用salt-run命令执行的命令行工具，可以通过调用Salt API很轻松构建。Salt Runner与Salt的执行模块很像，但是在Salt Master上运行而非Salt Minion上。</p>
+<h4 id="配置Salt-Master"><a href="#配置Salt-Master" class="headerlink" title="配置Salt Master"></a>配置Salt Master</h4><p>配置文件（/etc/salt/master.d/publish.conf）如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">svn:</span></span><br><span class="line"><span class="attr">  username:</span> <span class="string">'publish'</span>  <span class="comment"># 定义svn用户名，用于检出代码</span></span><br><span class="line"><span class="attr">  password:</span> <span class="string">'#1qaz@WSX#ht'</span>  <span class="comment"># svn密码</span></span><br><span class="line"><span class="attr">publish:</span></span><br><span class="line"><span class="attr">    master:</span> <span class="string">'admin.grid.mall.com'</span>  <span class="comment"># salt master主机名</span></span><br><span class="line"><span class="attr">    cwd:</span> <span class="string">'/data1/vhosts'</span>  <span class="comment"># 代码检出目录</span></span><br><span class="line"><span class="attr">projects:</span></span><br><span class="line">  <span class="string">www.mall.com:</span>  <span class="comment"># 定义项目名</span></span><br><span class="line"><span class="attr">    remote:</span> <span class="string">'svn://172.16.100.81/www.mall.com'</span> <span class="comment"># svn存放路径</span></span><br><span class="line"><span class="attr">    target:</span>  <span class="comment"># 定义代码部署列表 ip::rsync模块</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">'172.16.100.21::www_mall_com'</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">'172.16.100.22::www_mall_com'</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">'172.16.100.23::www_mall_com'</span></span><br></pre></td></tr></table></figure>
+<p>另外还要配置runner的放置目录：runner_dirs: [/srv/salt/_runners]，配置完成后要重启Puppet master。</p>
+<h4 id="Web前端部署rsync服务"><a href="#Web前端部署rsync服务" class="headerlink" title="Web前端部署rsync服务"></a>Web前端部署rsync服务</h4><p>rsync服务由/srv/salt/rsync模块进行管理，rsync配置文件(etc/rsyncd.conf)如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># File Managed by Salt</span></span><br><span class="line"></span><br><span class="line"><span class="string">uid</span> <span class="string">=</span> <span class="string">nobody</span></span><br><span class="line"><span class="string">gid</span> <span class="string">=</span> <span class="string">nobody</span></span><br><span class="line"><span class="string">use</span> <span class="string">chroot</span> <span class="string">=</span> <span class="literal">yes</span></span><br><span class="line"><span class="string">max</span> <span class="string">connections</span> <span class="string">=</span> <span class="number">150</span></span><br><span class="line"><span class="string">pid</span> <span class="string">file</span> <span class="string">=</span> <span class="string">/var/run/rsyncd.pid</span></span><br><span class="line"><span class="string">log</span> <span class="string">file</span> <span class="string">=</span> <span class="string">/var/log/rsyncd.log</span></span><br><span class="line"><span class="string">transfer</span> <span class="string">logging</span> <span class="string">=</span> <span class="literal">yes</span></span><br><span class="line"><span class="string">log</span> <span class="string">format</span> <span class="string">=</span> <span class="string">%t</span> <span class="string">%a</span> <span class="string">%m</span> <span class="string">%f</span> <span class="string">%b</span></span><br><span class="line"><span class="string">syslog</span> <span class="string">facility</span> <span class="string">=</span> <span class="string">local3</span></span><br><span class="line"><span class="string">timeout</span> <span class="string">=</span> <span class="number">300</span></span><br><span class="line"><span class="string">incoming</span> <span class="string">chmod</span> <span class="string">=</span> <span class="string">Du=rwx,Dog=rx,Fu=rw,Fgo=r</span></span><br><span class="line"><span class="string">hosts</span> <span class="string">allow=172.16.100.0/24</span></span><br><span class="line"></span><br><span class="line"><span class="string">[www_mall_com]</span></span><br><span class="line"><span class="string">path=/data1/vhosts/www.mall.com/htdocs/</span></span><br><span class="line"><span class="string">read</span> <span class="string">only=no</span></span><br></pre></td></tr></table></figure>
+<h4 id="编写runner脚本"><a href="#编写runner脚本" class="headerlink" title="编写runner脚本"></a>编写runner脚本</h4><p>部署系统在Salt Master上把代码从SVN中检出，通过rsync命令部署到web前端。runner脚本(/srv/salt/_runners/publish.py)如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string">Functions to publish code on the master</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Import salt libs</span></span><br><span class="line"><span class="keyword">import</span> salt.client</span><br><span class="line"><span class="keyword">import</span> salt.output</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">push</span><span class="params">(project, output=True)</span>:</span></span><br><span class="line">    <span class="string">'''</span></span><br><span class="line"><span class="string">    publish code to web server.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    CLI Example:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. code-block:: bash</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        salt-run publish.push project</span></span><br><span class="line"><span class="string">    '''</span></span><br><span class="line"></span><br><span class="line">    client = salt.client.LocalClient(__opts__[<span class="string">'conf_file'</span>])</span><br><span class="line">    ret = client.cmd(__opts__[<span class="string">'publish'</span>][<span class="string">'master'</span>],</span><br><span class="line">                      <span class="string">'svn.checkout'</span>,</span><br><span class="line">                       [</span><br><span class="line">                         __opts__[<span class="string">'publish'</span>][<span class="string">'cwd'</span>],</span><br><span class="line">                         __opts__[<span class="string">'projects'</span>][project][<span class="string">'remote'</span>]</span><br><span class="line">                       ],</span><br><span class="line">                       kwarg=&#123;</span><br><span class="line">                               <span class="string">'target'</span>:project,</span><br><span class="line">                               <span class="string">'username'</span>:__opts__[<span class="string">'svn'</span>][<span class="string">'username'</span>],</span><br><span class="line">                               <span class="string">'password'</span>:__opts__[<span class="string">'svn'</span>][<span class="string">'password'</span>]</span><br><span class="line">                             &#125;</span><br><span class="line">                    )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ret:</span><br><span class="line">        msg = <span class="string">'URL: %s\n%s'</span> %(__opts__[<span class="string">'projects'</span>][project][<span class="string">'remote'</span>], ret[__opts__[<span class="string">'publish'</span>][<span class="string">'master'</span>]])</span><br><span class="line">        ret = &#123;<span class="string">'Check out code'</span>: msg&#125;</span><br><span class="line">    <span class="keyword">if</span> output:</span><br><span class="line">        salt.output.display_output(ret, <span class="string">''</span>, __opts__)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> target <span class="keyword">in</span> __opts__[<span class="string">'projects'</span>][project][<span class="string">'target'</span>]:</span><br><span class="line">        cmd = <span class="string">'/usr/bin/rsync -avz --exclude=".svn" %s/%s/trunk/* %s/'</span> %(__opts__[<span class="string">'publish'</span>][<span class="string">'cwd'</span>], project, target)</span><br><span class="line">        ret[target] = client.cmd(__opts__[<span class="string">'publish'</span>][<span class="string">'master'</span>],</span><br><span class="line">                           <span class="string">'cmd.run'</span>,</span><br><span class="line">                           [</span><br><span class="line">                             cmd,</span><br><span class="line">                           ],</span><br><span class="line">                         )</span><br><span class="line"></span><br><span class="line">        title = <span class="string">'\nSending file to %s'</span> %target.split(<span class="string">':'</span>)[<span class="number">0</span>]</span><br><span class="line">        ret = &#123;title: ret[target][__opts__[<span class="string">'publish'</span>][<span class="string">'master'</span>]]&#125;</span><br><span class="line">        <span class="keyword">if</span> output:</span><br><span class="line">            salt.output.display_output(ret, <span class="string">''</span>, __opts__)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret</span><br></pre></td></tr></table></figure>
+<p>注意，一个项目（svn://172.16.100.81/<a href="http://www.mall.com" target="_blank" rel="noopener">www.mall.com</a> ）通常会建立三个SVN子目录：trunk、branches、tags，上面脚本推送时只会将trunk目录下的代码部署到web前端。</p>
+<h4 id="代码部署"><a href="#代码部署" class="headerlink" title="代码部署"></a>代码部署</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># salt-run publish.push www.mall.com</span></span><br></pre></td></tr></table></figure>
+<p>publish为上文runner脚本名，push为此脚本中定义的推送函数，<a href="http://www.mall.com为salt" target="_blank" rel="noopener">www.mall.com为salt</a> master中定义的项目名。</p>
+<p>参考：<br><a href="http://docs.saltstack.com/en/latest/ref/runners/" target="_blank" rel="noopener">Salt Runners</a><br><a href="http://docs.saltstack.com/en/latest/ref/clients/index.html" target="_blank" rel="noopener">Python client API</a></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/Saltstack/">Saltstack</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/devops/">devops</a><a href="/tags/saltstack/">saltstack</a><a href="/tags/salt/">salt</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    <br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Openstack 安装 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="Openstack集群搭建使用5台机器，一台Fuel管理机，一台Controller，一台Compute，两台Storage。这是一个最小化的安装，安装完成后可以对集群进行扩容。">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Openstack 安装">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Openstack 安装</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/09/10/openstack-install/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-09-10T02:00:00.000Z">
+          2014-09-10
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>OpenStack 是由 Rackspace 和 NASA 共同开发的云计算平台，帮助服务商和企业内部实现类似于 Amazon EC2 和 S3 的云基础架构服务(Infrastructure as a Service, IaaS)。OpenStack 包含两个主要模块：Nova 和 Swift，前者是 NASA 开发的虚拟服务器部署和业务计算模块；后者是Rackspace开发的分布式云存储模块，两者可以一起用，也可以分开单独用。OpenStack 是开源项目，除了有 Rackspace 和 NASA 的大力支持外，后面还有包括 Dell、Citrix、 Cisco、 Canonical 这些重量级公司的贡献和支持，发展速度非常快。</p>
+<p>Openstack集群搭建使用5台机器，一台Fuel管理机，一台Controller，一台Compute，两台Storage。这是一个最小化的安装，安装完成后可以对集群进行扩容。</p>
+<h2 id="1-网络环境准备"><a href="#1-网络环境准备" class="headerlink" title="1. 网络环境准备"></a>1. 网络环境准备</h2><p>网络规划：</p>
+<ul>
+<li>Floating/Public 网络 172.16.200.0/24 in VLAN 100 (untagged on servers) • Floating IP range 172.16.200.130 - 254  # 用于集群公网和虚拟机浮动IP，需要能与外网通信</li>
+<li>Internal network (private) 192.168.100.0/24  # 用于虚拟机间通信</li>
+<li>Gateway 192.168.100.1  # 虚拟机的网关地址</li>
+<li>DNS 8.8.4.4, 8.8.8.8  # DNS地址</li>
+<li>Management network 192.168.0.0/24 in VLAN 501 # 管理网络</li>
+<li>Storage network 192.168.1.0/24 in VLAN 502  # 存储网络</li>
+<li>Administrative network (for Fuel) 10.20.0.0/24 in VLAN 503  # Fuel集群管理网络</li>
+</ul>
+<p>服务器网卡配置：</p>
+<p>Fuel管理节点（Openstack集群管理）：</p>
+<ul>
+<li>eth0 10.20.0.2 — 插到交换机5 - 10口上</li>
+<li>eth1 172.16.200.128  — 插到交换机11 - 16口上</li>
+</ul>
+<p>控制节点，计算节点，存储节点：</p>
+<ul>
+<li>eth0  10.20.0.0/24   — 插到交换机5 - 10口上</li>
+<li>eth1 公有网络172.16.200.0/24，管理网络192.168.0.0/24， 存储网络192.168.1.0/24  — 插到交换机11 - 16口上</li>
+<li>eth2 私有网络，192.168.100.0/24  — 插到交换机17 - 21口上</li>
+</ul>
+<p>使用一台Cisco 2960交换机，配置如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">switch<span class="comment">#configure t</span></span><br><span class="line">Enter configuration commands, one per line.  End with CNTL/Z.</span><br><span class="line">switch(config)<span class="comment">#vlan 500</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_public</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 501</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_management</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 502</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_storage</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 503</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_admin</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 510-530</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#interface range gigabitethernet1/0/5 - 10</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport access vlan 503</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport mode access</span></span><br><span class="line">switch(config-if-range)<span class="comment">#spanning-tree portfast</span></span><br><span class="line">switch(config-if-range)<span class="comment">#no shut</span></span><br><span class="line">switch(config-if-range)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#interface range gigabitethernet1/0/11 - 16</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport trunk native vlan 500</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport trunk allowed vlan 500-503</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport mode trunk</span></span><br><span class="line">switch(config-if-range)<span class="comment">#no shut</span></span><br><span class="line">switch(config-if-range)<span class="comment">#spanning-tree portfast trunk</span></span><br><span class="line">%Warning: portfast should only be enabled on ports connected to a single</span><br><span class="line"> host. Connecting hubs, concentrators, switches, bridges, etc... to this</span><br><span class="line"> interface  when portfast is enabled, can cause temporary bridging loops.</span><br><span class="line"> Use with CAUTION</span><br><span class="line"></span><br><span class="line">switch(config-if-range)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#interface range gigabitethernet1/0/17 - 22</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport trunk allowed vlan 510-530</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport mode trunk</span></span><br><span class="line">switch(config-if-range)<span class="comment">#no shut</span></span><br><span class="line">switch(config-if-range)<span class="comment">#spanning-tree portfast trunk</span></span><br><span class="line">switch(config-if-range)<span class="comment">#exit</span></span><br><span class="line"></span><br><span class="line">switch<span class="comment">#copy running-config startup-config</span></span><br></pre></td></tr></table></figure>
+<h2 id="2-Fuel管理节点安装"><a href="#2-Fuel管理节点安装" class="headerlink" title="2. Fuel管理节点安装"></a>2. Fuel管理节点安装</h2><p>从Mirantis下载镜像：<a href="https://software.mirantis.com/，本次安装使用MirantisOpenStack-5.0.1.iso镜像。" target="_blank" rel="noopener">https://software.mirantis.com/，本次安装使用MirantisOpenStack-5.0.1.iso镜像。</a></p>
+<p>通过远程管理卡进行安装，打开虚拟介质，挂载下载好的镜像，从虚拟镜像启动服务器。</p>
+<p>到如下界面时按tab键，修改参数，hostname改为你的主机名，showmenu改为yes，回车继续：</p>
+<p><img src="/images/14-09-10/openstack_k.png" alt="Openstack Fuel内核参数设置"></p>
+<p>到如下界面，设置网络、PXE启动、DNS&amp;主机名、root密码等，网络配置界面，每配置一块网卡都需要Apply，然后再配置下一块网卡，都配置完成后保存退出。</p>
+<p><img src="/images/14-09-10/openstack_fuel_setting.png" alt="Openstack Fuel设置"></p>
+<p>安装完成后通过浏览访问<a href="http://10.20.0.2:8000/#clusters，点击新建Openstack环境，填写名称，并选择Openstack版本，然后点前进。" target="_blank" rel="noopener">http://10.20.0.2:8000/#clusters，点击新建Openstack环境，填写名称，并选择Openstack版本，然后点前进。</a></p>
+<p><img src="/images/14-09-10/openstack_env_1.png" alt="新建Openstack环境1"></p>
+<p>选择部署模式，本文使用多节点，非HA模式，然后点前进。</p>
+<p><img src="/images/14-09-10/openstack_env_2.png" alt="新建Openstack环境2"></p>
+<p>选择虚拟化管理器类型，本文选择KVM，然后点前进。</p>
+<p><img src="/images/14-09-10/openstack_env_3.png" alt="新建Openstack环境3"></p>
+<p>选择网络模式，本文选择Neutron VLAN模式，然后点前进。</p>
+<p><img src="/images/14-09-10/openstack_env_4.png" alt="新建Openstack环境4"></p>
+<p>选择存储类型，本文使用Ceph做后端存储，然后点前进。</p>
+<p><img src="/images/14-09-10/openstack_env_5.png" alt="新建Openstack环境5"></p>
+<p>附加服务，不选择，直接点前进。</p>
+<p><img src="/images/14-09-10/openstack_env_6.png" alt="新建Openstack环境6"></p>
+<p>点击完成，完成环境设置。</p>
+<p><img src="/images/14-09-10/openstack_env_7.png" alt="新建Openstack环境7"></p>
+<h2 id="3-Openstack部署"><a href="#3-Openstack部署" class="headerlink" title="3. Openstack部署"></a>3. Openstack部署</h2><p>启动各节点设置磁盘Raid：</p>
+<p>控制节点和计算节点使用Raid 5；存储节点两块磁盘做Raid 1，剩下四块磁盘做单盘Raid 0（每块磁盘启动一个Ceph进程，以保证性能）。</p>
+<p>计算节点需要在BIOS中打开虚拟化选项，否则在创建虚拟机时会报如下错误：</p>
+<pre><code>Error: No valid host was found.
+</code></pre><p>查看Nova日志中有如下报错：</p>
+<pre><code>libvirtError: internal error no supported architecture for os type ‘hvm&apos;
+</code></pre><p>配置完成后从网卡启动服务器，启动完成后，回到管理界面，四台服务器已经被发现。</p>
+<p>点击 网络 选选卡，对网络进行如下配置：</p>
+<p><img src="/images/14-09-10/openstack_network_1.png" alt="Openstack网络设置1"></p>
+<p><img src="/images/14-09-10/openstack_network_2.png" alt="Openstack网络设置2"></p>
+<p><img src="/images/14-09-10/openstack_network_3.png" alt="Openstack网络设置3"></p>
+<p>修改完成后点 保存设置，然后点 验证网络，如果网络配置正确会显示验证成功。</p>
+<p>点击 设置 选项卡，如下进行设置：</p>
+<p><img src="/images/14-09-10/openstack_setting_1.png" alt="Openstack设置1"></p>
+<p>勾选Nova quotas，这样可以对虚拟资源做配额。</p>
+<p><img src="/images/14-09-10/openstack_setting_2.png" alt="Openstack设置2"></p>
+<p>CentOS 6.5 需要设置OVS VLAN splinters特性。</p>
+<p><img src="/images/14-09-10/openstack_setting_3.png" alt="Openstack设置3"></p>
+<p>存储勾选以上四个选项，其中 Ceph RBD选项运行虚拟机进行热迁移，完成后点 保存设置。</p>
+<p>以上设置完成后，点击 节点 选项卡，然后点 增加节点。</p>
+<p><img src="/images/14-09-10/openstack_addnode_1.png" alt="Openstack添加节点1"></p>
+<p>依次选择控制节点、计算节点、和存储节点。</p>
+<p><img src="/images/14-09-10/openstack_addnode_2_compute.png" alt="Openstack添加节点2"></p>
+<p><img src="/images/14-09-10/openstack_addnode_3_storage_ceph_osd.png" alt="Openstack添加节点3"></p>
+<p>选择完成后配置各角色 磁盘，以存储节点为例：</p>
+<p><img src="/images/14-09-10/openstack_dist_1.png" alt="Openstack磁盘1"></p>
+<p><img src="/images/14-09-10/openstack_dist_2.png" alt="Openstack磁盘2"></p>
+<p><img src="/images/14-09-10/openstack_dist_3.png" alt="Openstack磁盘3"></p>
+<p>配置各角色 网络，以存储节点为例：</p>
+<p><img src="/images/14-09-10/openstack_network_1.png" alt="Openstack网络1"></p>
+<p><img src="/images/14-09-10/openstack_network_2.png" alt="Openstack网络2"></p>
+<p><img src="/images/14-09-10/openstack_network_3.png" alt="Openstack网络3"></p>
+<p>根据上图配置网络，配置完成后返回 节点 选项卡，点 部署变更，开始部署节点：</p>
+<p>部署操作系统：</p>
+<p><img src="/images/14-09-10/openstack_dist_1.png" alt="Openstack部署1"></p>
+<p>部署Openstack：</p>
+<p><img src="/images/14-09-10/openstack_dist_2.png" alt="Openstack部署2"></p>
+<p>完成部署：</p>
+<p><img src="/images/14-09-10/openstack_dist_3.png" alt="Openstack部署3"></p>
+<p>可以点击日志选项卡，查看安装日志；点击健康检查选项卡进行健康检查：</p>
+<p><img src="/images/14-09-10/openstack_h.png" alt="Openstack健康检查"></p>
+<p>访问Openstack 管理控制台<a href="http://10.20.0.10/：" target="_blank" rel="noopener">http://10.20.0.10/：</a></p>
+<p><img src="/images/14-09-10/openstack_c.png" alt="Openstack控制台"></p>
+<h2 id="4-参考文档"><a href="#4-参考文档" class="headerlink" title="4. 参考文档"></a>4. 参考文档</h2><ul>
+<li><a href="http://ceph.com/cloud/ceph-and-mirantis-openstack/" target="_blank" rel="noopener">Ceph and Mirantis OpenStack</a></li>
+<li><a href="http://docs.mirantis.com/openstack/fuel/fuel-5.0/" target="_blank" rel="noopener">Mirantis OpenStack Documentation</a></li>
+</ul>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/虚拟化/">虚拟化</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/Openstack/">Openstack</a><a href="/tags/KVM/">KVM</a><a href="/tags/Ceph/">Ceph</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    <br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

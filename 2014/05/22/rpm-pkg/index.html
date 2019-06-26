@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>rpm打包 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="如何将源代码打成rpm包？">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="rpm打包">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>rpm打包</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/05/22/rpm-pkg/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-22T02:00:00.000Z">
+          2014-05-22
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>为了方便批量进行软件安装，我们通常将源代码打包，放到yum仓库中进行统一管理，本文记录了一次rpm打包过程。</p>
+<h2 id="1、安装rpm-build"><a href="#1、安装rpm-build" class="headerlink" title="1、安装rpm-build"></a>1、安装rpm-build</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y rpm-build</span><br></pre></td></tr></table></figure>
+<h2 id="2、安装编译依赖包"><a href="#2、安装编译依赖包" class="headerlink" title="2、安装编译依赖包"></a>2、安装编译依赖包</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y make gcc gcc-c++ libtool autoconf automake imake</span><br></pre></td></tr></table></figure>
+<h2 id="3、安装软件本身依赖的软件包"><a href="#3、安装软件本身依赖的软件包" class="headerlink" title="3、安装软件本身依赖的软件包"></a>3、安装软件本身依赖的软件包</h2><p>以CoreSeek安装为例，<a href="http://www.coreseek.cn/products-install/" target="_blank" rel="noopener">Coreseek</a> 是一款中文全文检索/搜索软件，以GPLv2许可协议开源发布，基于Sphinx研发并独立发布，专攻中文搜索和信息处理领域，适用于行业/垂直搜索、论坛/站内搜索、数据库搜索、文档/文献检索、信息检索、数据挖掘等应用场景。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y libxml2-devel expat-devel mysql-devel python-devel</span><br></pre></td></tr></table></figure>
+<h2 id="4、如下创建rpmbuild"><a href="#4、如下创建rpmbuild" class="headerlink" title="4、如下创建rpmbuild"></a>4、如下创建rpmbuild</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@salt ~]<span class="comment"># ls /root/rpmbuild</span></span><br><span class="line">BUILD  BUILDROOT  RPMS  SOURCES  SPECS  SRPMS</span><br></pre></td></tr></table></figure>
+<h2 id="5、编写描述文件"><a href="#5、编写描述文件" class="headerlink" title="5、编写描述文件"></a>5、编写描述文件</h2><p>CoreSeek依赖mmseg中文分词库，所有先给mmseg打包。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">[root@salt SPECS]<span class="comment"># vi mmseg.spec</span></span><br><span class="line">Name: mmseg</span><br><span class="line">Version: 3.2.14</span><br><span class="line">Release: 1%&#123;?dist&#125;</span><br><span class="line">Summary: A Word Identification System <span class="keyword">for</span> Mandarin Chinese Text Based on Two Variants of the Maximum Matching Algorithm</span><br><span class="line">Group:   System Environment/Daemons</span><br><span class="line">License: Free <span class="keyword">for</span> noncommercial use</span><br><span class="line">URL:     http://www.coreseek.cn/opensource/mmseg/</span><br><span class="line">Source0: http://www.coreseek.cn/uploads/csft/3.2/mmseg-3.2.14.tar.gz</span><br><span class="line">BuildRoot: %&#123;_tmppath&#125;/%&#123;name&#125;-%&#123;version&#125;-%&#123;release&#125;-root-%(%&#123;__id_u&#125; -n)</span><br><span class="line"></span><br><span class="line">%description</span><br><span class="line">A Word Identification System <span class="keyword">for</span> Mandarin Chinese Text Based on Two Variants of the Maximum Matching Algorithm</span><br><span class="line"></span><br><span class="line">%prep</span><br><span class="line">%setup -q -n %&#123;name&#125;-%&#123;version&#125;</span><br><span class="line"></span><br><span class="line">%build</span><br><span class="line">./bootstrap</span><br><span class="line">./configure --prefix=/usr/<span class="built_in">local</span>/mmseg</span><br><span class="line">make</span><br><span class="line"></span><br><span class="line">%install</span><br><span class="line">rm -rf <span class="variable">$RPM_BUILD_ROOT</span></span><br><span class="line">make DESTDIR=<span class="variable">$RPM_BUILD_ROOT</span> install</span><br><span class="line"></span><br><span class="line">%clean</span><br><span class="line">/bin/rm -rf <span class="variable">$RPM_BUILD_ROOT</span></span><br><span class="line">/bin/rm -rf <span class="variable">$RPM_BUILD_DIR</span>/%&#123;name&#125;-%&#123;version&#125;</span><br><span class="line"></span><br><span class="line">%files</span><br><span class="line">%defattr(-,root,root)</span><br><span class="line">%dir</span><br><span class="line">/usr/<span class="built_in">local</span>/mmseg</span><br><span class="line"></span><br><span class="line">%changelog</span><br></pre></td></tr></table></figure>
+<p>CoreSeek描述文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line">[root@salt SPECS]<span class="comment"># vi coreseek.spec</span></span><br><span class="line">Name: coreseek</span><br><span class="line">Version: 4.1b</span><br><span class="line">Release: 1%&#123;?dist&#125;</span><br><span class="line">Summary: 支持中文全文检索的Sphinx定制版本</span><br><span class="line">Group:   System Environment/Daemons</span><br><span class="line">License: GPLv2</span><br><span class="line">URL:     http://www.coreseek.cn/</span><br><span class="line">Source0: csft-4.1.tar.gz</span><br><span class="line">BuildRoot: %&#123;_tmppath&#125;/%&#123;name&#125;-%&#123;version&#125;-%&#123;release&#125;-root-%(%&#123;__id_u&#125; -n)</span><br><span class="line">Requires: mmseg</span><br><span class="line">Requires: mysql-devel</span><br><span class="line">Requires: libxml2-devel</span><br><span class="line">Requires: expat-devel</span><br><span class="line">Requires: python-devel</span><br><span class="line"></span><br><span class="line">Requires(post): chkconfig</span><br><span class="line">Requires(preun): chkconfig</span><br><span class="line">Requires(preun): initscripts</span><br><span class="line">Requires(postun): initscripts</span><br><span class="line"></span><br><span class="line">%description</span><br><span class="line">支持中文全文检索的Sphinx定制版本</span><br><span class="line"></span><br><span class="line">%prep</span><br><span class="line">%setup -q -n csft-4.1</span><br><span class="line"></span><br><span class="line">%build</span><br><span class="line">sh buildconf.sh</span><br><span class="line">./configure --prefix=/usr/<span class="built_in">local</span>/coreseek --without-unixodbc --with-mmseg --with-mmseg-includes=/usr/<span class="built_in">local</span>/mmseg/include/mmseg/ --with-mmseg-libs=/usr/<span class="built_in">local</span>/mmseg/lib/ --with-mysql --with-python</span><br><span class="line">make</span><br><span class="line"></span><br><span class="line">%install</span><br><span class="line">rm -rf <span class="variable">$RPM_BUILD_ROOT</span></span><br><span class="line">make DESTDIR=<span class="variable">$RPM_BUILD_ROOT</span> install</span><br><span class="line">mv <span class="variable">$RPM_BUILD_ROOT</span>/usr/<span class="built_in">local</span>/coreseek/etc/sphinx.conf.dist <span class="variable">$RPM_BUILD_ROOT</span>/usr/<span class="built_in">local</span>/coreseek/etc/sphinx.conf</span><br><span class="line">mkdir -p <span class="variable">$RPM_BUILD_ROOT</span>%&#123;_initrddir&#125;</span><br><span class="line">cp /etc/init.d/searchd <span class="variable">$RPM_BUILD_ROOT</span>%&#123;_initrddir&#125;/</span><br><span class="line"></span><br><span class="line">%clean</span><br><span class="line">/bin/rm -rf <span class="variable">$RPM_BUILD_ROOT</span></span><br><span class="line">/bin/rm -rf <span class="variable">$RPM_BUILD_DIR</span>/%&#123;name&#125;-%&#123;version&#125;</span><br><span class="line"></span><br><span class="line">%files</span><br><span class="line">%defattr(-,root,root)</span><br><span class="line"></span><br><span class="line">%attr(0755, root, root) %&#123;_initrddir&#125;/</span><br><span class="line">%config(noreplace) /usr/<span class="built_in">local</span>/coreseek/etc/sphinx.conf</span><br><span class="line">/usr/<span class="built_in">local</span>/coreseek/etc/example.sql</span><br><span class="line">/usr/<span class="built_in">local</span>/coreseek/etc/sphinx-min.conf.dist</span><br><span class="line"></span><br><span class="line">%dir</span><br><span class="line">/usr/<span class="built_in">local</span>/coreseek/bin</span><br><span class="line">/usr/<span class="built_in">local</span>/coreseek/share</span><br><span class="line">%attr(-, sphinx, root) /usr/<span class="built_in">local</span>/coreseek/var</span><br><span class="line"></span><br><span class="line">%preun</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$1</span> -eq 0 ] ; <span class="keyword">then</span></span><br><span class="line">    /sbin/service searchd stop &gt;/dev/null 2&gt;&amp;1</span><br><span class="line">    /sbin/chkconfig --del searchd</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">%post</span><br><span class="line">cat /etc/passwd |grep -q <span class="string">'^sphinx:'</span></span><br><span class="line"><span class="keyword">if</span> (( $? != 0 )); <span class="keyword">then</span></span><br><span class="line">    /usr/sbin/groupadd -g 495 sphinx &amp;&gt;/dev/null</span><br><span class="line">    /usr/sbin/useradd -g 495 -u 495 -m -c <span class="string">'Sphinx Search'</span> -d /var/lib/sphinx -s /sbin/nologin www &amp;&gt;/dev/null</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line">/sbin/chkconfig --add searchd</span><br><span class="line"></span><br><span class="line">%changelog</span><br></pre></td></tr></table></figure>
+<p>searchd启动脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># sphinx searchd Free open-source SQL full-text search engine</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># chkconfig:   - 20 80</span></span><br><span class="line"><span class="comment"># description: Starts and stops the sphinx searchd daemon that handles \</span></span><br><span class="line"><span class="comment">#          all search requests.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### BEGIN INIT INFO</span></span><br><span class="line"><span class="comment"># Provides: searchd</span></span><br><span class="line"><span class="comment"># Required-Start: $local_fs $network</span></span><br><span class="line"><span class="comment"># Required-Stop: $local_fs $network</span></span><br><span class="line"><span class="comment"># Should-Start: $remote_fs</span></span><br><span class="line"><span class="comment"># Should-Stop: $remote_fs</span></span><br><span class="line"><span class="comment"># Default-Start: </span></span><br><span class="line"><span class="comment"># Default-Stop: 0 1 2 3 4 5 6</span></span><br><span class="line"><span class="comment"># Short-Description: start and stop sphinx searchd daemon</span></span><br><span class="line"><span class="comment"># Description: Sphinx is a free open-source SQL full-text search engine     </span></span><br><span class="line"><span class="comment">### END INIT INFO</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Source function library.</span></span><br><span class="line">. /etc/rc.d/init.d/<span class="built_in">functions</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">exec</span>=<span class="string">"/usr/local/coreseek/bin/searchd"</span></span><br><span class="line">prog=<span class="string">"searchd"</span></span><br><span class="line">config=<span class="string">"/usr/local/coreseek/etc/sphinx.conf"</span></span><br><span class="line">username=<span class="string">"sphinx"</span></span><br><span class="line"></span><br><span class="line">lockfile=/var/lock/subsys/searchd</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">start</span></span>() &#123;</span><br><span class="line">    [ -x <span class="variable">$exec</span> ] || <span class="built_in">exit</span> 5</span><br><span class="line">    [ -f <span class="variable">$config</span> ] || <span class="built_in">exit</span> 6</span><br><span class="line">    <span class="built_in">echo</span> -n $<span class="string">"Starting <span class="variable">$prog</span>: "</span></span><br><span class="line">    <span class="comment"># if not running, start it up here, usually something like "daemon $exec"</span></span><br><span class="line">    daemon --user=<span class="variable">$username</span> <span class="variable">$exec</span> --config <span class="variable">$config</span></span><br><span class="line">    retval=$?</span><br><span class="line">    <span class="built_in">echo</span></span><br><span class="line">    [ <span class="variable">$retval</span> -eq 0 ] &amp;&amp; touch <span class="variable">$lockfile</span></span><br><span class="line">    <span class="built_in">return</span> <span class="variable">$retval</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">stop</span></span>() &#123;</span><br><span class="line">    <span class="built_in">echo</span> -n $<span class="string">"Stopping <span class="variable">$prog</span>: "</span></span><br><span class="line">    <span class="comment"># stop it here, often "killproc $prog"</span></span><br><span class="line">    killproc <span class="variable">$prog</span></span><br><span class="line">    retval=$?</span><br><span class="line">    <span class="built_in">echo</span></span><br><span class="line">    [ <span class="variable">$retval</span> -eq 0 ] &amp;&amp; rm -f <span class="variable">$lockfile</span></span><br><span class="line">    <span class="built_in">return</span> <span class="variable">$retval</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">restart</span></span>() &#123;</span><br><span class="line">    stop</span><br><span class="line">    start</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">reload</span></span>() &#123;</span><br><span class="line">    restart</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">force_reload</span></span>() &#123;</span><br><span class="line">    restart</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">rh_status</span></span>() &#123;</span><br><span class="line">    <span class="comment"># run checks to determine if the service is running or use generic status</span></span><br><span class="line">    status <span class="variable">$prog</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">rh_status_q</span></span>() &#123;</span><br><span class="line">    rh_status &gt;/dev/null 2&gt;&amp;1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">case</span> <span class="string">"<span class="variable">$1</span>"</span> <span class="keyword">in</span></span><br><span class="line">    start)</span><br><span class="line">        rh_status_q &amp;&amp; <span class="built_in">exit</span> 0</span><br><span class="line">        <span class="variable">$1</span></span><br><span class="line">        ;;</span><br><span class="line">    stop)</span><br><span class="line">        rh_status_q || <span class="built_in">exit</span> 0</span><br><span class="line">        <span class="variable">$1</span></span><br><span class="line">        ;;</span><br><span class="line">    restart)</span><br><span class="line">        <span class="variable">$1</span></span><br><span class="line">        ;;</span><br><span class="line">    reload)</span><br><span class="line">        rh_status_q || <span class="built_in">exit</span> 7</span><br><span class="line">        <span class="variable">$1</span></span><br><span class="line">        ;;</span><br><span class="line">    force-reload)</span><br><span class="line">        force_reload</span><br><span class="line">        ;;</span><br><span class="line">    status)</span><br><span class="line">        rh_status</span><br><span class="line">        ;;</span><br><span class="line">    condrestart|try-restart)</span><br><span class="line">        rh_status_q || <span class="built_in">exit</span> 0</span><br><span class="line">        restart</span><br><span class="line">        ;;</span><br><span class="line">    *)</span><br><span class="line">        <span class="built_in">echo</span> $<span class="string">"Usage: <span class="variable">$0</span> &#123;start|stop|status|restart|condrestart|try-restart|reload|force-reload&#125;"</span></span><br><span class="line">        <span class="built_in">exit</span> 2</span><br><span class="line"><span class="keyword">esac</span></span><br><span class="line"><span class="built_in">exit</span> $?</span><br></pre></td></tr></table></figure>
+<h2 id="6、打包"><a href="#6、打包" class="headerlink" title="6、打包"></a>6、打包</h2><p>执行下面命令为mmseg打包：</p>
+<p>rpmbuild -ba mmseg.spec</p>
+<p>如果没问题，软件包会根据服务器架构放置到相应目录中。如：/root/rpmbuild/RPMS/x86_64/mmseg-3.2.14-1.el6.x86_64.rpm</p>
+<p>安装好编译的mmseg包再开始编译coreseek：</p>
+<p>rpm -ivh /root/rpmbuild/RPMS/x86_64/mmseg-3.2.14-1.el6.x86_64.rpm</p>
+<p>rpmbuild -ba coreseek.spec</p>
+<p>完成后编译包为：/root/rpmbuild/RPMS/x86_64/coreseek-4.1b-1.el6.x86_64.rpm</p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/其他/">其他</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/rpm/">rpm</a><a href="/tags/rpm-build/">rpm-build</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    <br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

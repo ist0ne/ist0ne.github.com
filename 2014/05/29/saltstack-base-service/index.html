@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>Saltstack：基础服务部署 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="本文以一个小的电商网站（www.mall.com）为例，讲述Saltstack在真实场景中的应用。">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Saltstack：基础服务部署">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Saltstack：基础服务部署</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/05/29/saltstack-base-service/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-29T02:00:00.000Z">
+          2014-05-29
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>对基础服务的管理包括配置管理系统、用户账号管理、yum配置管理、hosts文件管理、时间同步管理、DNS配置管理。</p>
+<h3 id="配置管理系统"><a href="#配置管理系统" class="headerlink" title="配置管理系统"></a>配置管理系统</h3><p>配置管理系统使用模块化设计，每个服务一个模块，将多个模块组织到一起形成角色（/srv/salt/roles/）。所有模块放置到：/srv/salt下，入口配置文件为：/srv/salt/top.sls。模块使用的变量放置到：/srv/pillar，入口配置文件：/srv/pillar/top.sls。针对变量的作用域不同，将变量分为三级级，一级应用于模块（/srv/pillar/模块名），一级应用于角色（/srv/pillar/roles/），一级应用于主机节点（/srv/pillar/nodes）。具体配置在此不一一列出，具体参见salt配置文件。</p>
+<p>入口配置/srv/salt/top.sls，直接引用各种角色：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">base:</span></span><br><span class="line">  <span class="string">'*'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.common</span></span><br><span class="line">  <span class="string">'admin.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.admin</span></span><br><span class="line">  <span class="string">'ha.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.ha</span></span><br><span class="line">  <span class="string">'web*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.web</span></span><br><span class="line">  <span class="string">'cache*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.cache</span></span><br><span class="line">  <span class="string">'mc*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.mc</span></span><br><span class="line">  <span class="string">'db*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.db</span></span><br><span class="line">  <span class="string">'search*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.search</span></span><br><span class="line">  <span class="string">'storage*'</span><span class="string">.grid.mall.com':</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.storage</span></span><br></pre></td></tr></table></figure>
+<p>变量入口配置文件/srv/pillar/top.sls：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">base:</span></span><br><span class="line">  <span class="string">'*'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.common</span></span><br><span class="line">  <span class="comment"># 引用角色级变量</span></span><br><span class="line">  <span class="comment"># 模块级变量在角色级变量中引用</span></span><br><span class="line">  <span class="string">'admin.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.admin</span></span><br><span class="line">  <span class="string">'ha.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.ha</span></span><br><span class="line">  <span class="string">'web*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.web</span></span><br><span class="line">  <span class="string">'cache*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.cache</span></span><br><span class="line">  <span class="string">'mc*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.mc</span></span><br><span class="line">  <span class="string">'db*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.db</span></span><br><span class="line">  <span class="string">'search*.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.search</span></span><br><span class="line">  <span class="string">'storage*'</span><span class="string">.grid.mall.com':</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">roles.storage</span></span><br><span class="line">  <span class="comment"># 引用节点级变量</span></span><br><span class="line">  <span class="string">'ha1.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">nodes.ha1</span></span><br><span class="line">  <span class="string">'ha2.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">nodes.ha2</span></span><br><span class="line">  <span class="string">'mc1.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">nodes.mc1</span></span><br><span class="line">  <span class="string">'mc2.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">nodes.mc2</span></span><br><span class="line">  <span class="string">'db1.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">nodes.db1</span></span><br><span class="line">  <span class="string">'db2.grid.mall.com'</span><span class="string">:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">nodes.db2</span></span><br></pre></td></tr></table></figure>
+<h3 id="用户账号管理"><a href="#用户账号管理" class="headerlink" title="用户账号管理"></a>用户账号管理</h3><p>用户管理模块：/srv/salt/users</p>
+<p>此模块用到pillar，pillar和grains都可以用来获取变量，但是grains偏向于获取客户端相关信息，比如客户端硬件架构、cpu核数、操作系统版本等信息，相当于puppet的facter；pillar用于定义用户变量，通过pillar变量的传递，使salt state模块易于重用，相当于puppet的hiera。使用pillar变量之前需要执行salt ‘*’ saltutil.refresh_pillar命令使变量生效。使用命令salt ‘admin.grid.mall.com’ pillar.item users获取users变量：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># salt 'admin.grid.mall.com' pillar.item users</span></span><br><span class="line"><span class="string">admin.grid.mall.com:</span></span><br><span class="line"><span class="bullet">    -</span><span class="bullet">---------</span></span><br><span class="line"><span class="attr">    users:</span></span><br><span class="line"><span class="bullet">        -</span><span class="bullet">---------</span></span><br><span class="line"><span class="attr">        dongliang:</span></span><br><span class="line"><span class="bullet">            -</span><span class="bullet">---------</span></span><br><span class="line"><span class="attr">            fullname:</span></span><br><span class="line">                <span class="string">Shi</span> <span class="string">Dongliang</span></span><br><span class="line"><span class="attr">            gid:</span></span><br><span class="line">                <span class="number">1000</span></span><br><span class="line"><span class="attr">            group:</span></span><br><span class="line">                <span class="string">dongliang</span></span><br><span class="line"><span class="attr">            password:</span></span><br><span class="line">                <span class="string">$6$BZpX5dWZ$.......</span></span><br><span class="line"><span class="attr">            shell:</span></span><br><span class="line">                <span class="string">/bin/bash</span></span><br><span class="line"><span class="attr">            ssh_auth:</span></span><br><span class="line"><span class="bullet">                -</span><span class="bullet">---------</span></span><br><span class="line"><span class="attr">                comment:</span></span><br><span class="line">                    <span class="string">dongliang@leju.com</span></span><br><span class="line"><span class="attr">                key:</span></span><br><span class="line">                    <span class="string">AAAAB3......==</span></span><br><span class="line"><span class="attr">            sudo:</span></span><br><span class="line">                <span class="literal">True</span></span><br><span class="line"><span class="attr">            uid:</span></span><br><span class="line">                <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<p>获取admin.grid.mall.com上面定义的所有pillar变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># salt 'admin.grid.mall.com' pillar.items</span></span><br></pre></td></tr></table></figure>
+<p>添加用户：</p>
+<p>/srv/salt/users/user.sls用于管理用户</p>
+<p><img src="/images/14-05-29/user1.png" alt="user1定义"><br><img src="/images/14-05-29/user2.png" alt="user2定义"></p>
+<p>sudo.sls为用户添加sudo权限：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">sudoers:</span></span><br><span class="line">  <span class="string">file.managed:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">/etc/sudoers</span></span><br></pre></td></tr></table></figure>
+<p>/srv/salt/users/user.sls读取/srv/pillar/users/init.sls中的users变量。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">users:</span></span><br><span class="line"><span class="attr">  dongliang:</span>  <span class="comment"># 定义用户名</span></span><br><span class="line"><span class="attr">    group:</span> <span class="string">dongliang</span>  <span class="comment"># 用户所在组</span></span><br><span class="line"><span class="attr">    uid:</span> <span class="number">1000</span>  <span class="comment"># 用户uid</span></span><br><span class="line"><span class="attr">    gid:</span> <span class="number">1000</span>  <span class="comment"># 用户gid</span></span><br><span class="line"><span class="attr">    fullname:</span> <span class="string">Shi</span> <span class="string">Dongliang</span></span><br><span class="line"><span class="attr">    password:</span>   <span class="string">$6$BZpX5dWZ$......</span>  <span class="comment"># 密码，注意是hash后的密码</span></span><br><span class="line"><span class="attr">    shell:</span> <span class="string">/bin/bash</span>  <span class="comment"># 用户shell</span></span><br><span class="line"><span class="attr">    sudo:</span> <span class="literal">true</span>  <span class="comment"># 是否给sudo权限</span></span><br><span class="line"><span class="attr">    ssh_auth:</span>  <span class="comment"># 无密码登录，可选项</span></span><br><span class="line"><span class="attr">      key:</span> <span class="string">AAAAB3......==</span></span><br><span class="line"><span class="attr">      comment:</span> <span class="string">dongliang@mall.com</span></span><br></pre></td></tr></table></figure>
+<p>在salt-master上执行下面命令使配置生效</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># salt '*' saltutil.refresh_pillar</span></span><br><span class="line"><span class="comment"># salt '*' state.highstate</span></span><br></pre></td></tr></table></figure>
+<h3 id="yum配置管理"><a href="#yum配置管理" class="headerlink" title="yum配置管理"></a>yum配置管理</h3><p>yum配置管理：/srv/salt/base/repo.sls<br>配置文件：/srv/salt/base/files/mall.repo  # 此配置文件可以通过salt协议下发到客户端</p>
+<p>/srv/salt/base/repo.sls定义，管理mall.repo文件，当文件改变后执行yum clean all清理缓存，是配置生效。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">/etc/yum.repos.d/mall.repo:</span></span><br><span class="line">  <span class="string">file.managed:</span></span><br><span class="line"><span class="attr">    - source:</span> <span class="attr">salt://base/files/mall.repo</span></span><br><span class="line"><span class="attr">    - user:</span> <span class="string">root</span></span><br><span class="line"><span class="attr">    - group:</span> <span class="string">root</span></span><br><span class="line"><span class="attr">    - mode:</span> <span class="number">644</span></span><br><span class="line"><span class="attr">    - order:</span> <span class="number">1</span></span><br><span class="line">  <span class="string">cmd.wait:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">yum</span> <span class="string">clean</span> <span class="string">all</span></span><br><span class="line"><span class="attr">    - watch:</span></span><br><span class="line"><span class="attr">       - file:</span> <span class="string">/etc/yum.repos.d/mall.repo</span></span><br></pre></td></tr></table></figure>
+<h3 id="hosts文件管理"><a href="#hosts文件管理" class="headerlink" title="hosts文件管理"></a>hosts文件管理</h3><p>hosts文件管理：/srv/salt/base/hosts.sls</p>
+<p>/srv/salt/base/hosts.sls 定义了每个主机名和IP的对应关系。如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">admin.grid.mall.com:</span></span><br><span class="line">  <span class="string">host.present:</span></span><br><span class="line"><span class="attr">    - ip:</span> <span class="number">172.16</span><span class="number">.100</span><span class="number">.81</span></span><br><span class="line"><span class="attr">    - order:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">    - names:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">admin.grid.mall.com</span></span><br></pre></td></tr></table></figure>
+<h3 id="时间同步管理"><a href="#时间同步管理" class="headerlink" title="时间同步管理"></a>时间同步管理</h3><p>时间同步作为一个cron，定义文件为：/srv/salt/base/crons.sls</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 引用ntp模块</span></span><br><span class="line"><span class="attr">include:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">ntp</span></span><br><span class="line"></span><br><span class="line"><span class="string">'/usr/sbin/ntpdate 1.cn.pool.ntp.org 1.asia.pool.ntp.org'</span><span class="string">:</span></span><br><span class="line">  <span class="string">cron.present:</span></span><br><span class="line"><span class="attr">    - user:</span> <span class="string">root</span></span><br><span class="line"><span class="attr">    - minute:</span> <span class="number">0</span></span><br><span class="line"><span class="attr">    - hour:</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<p>ntp模块：ntp/init.sls</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装ntpdate软件包</span></span><br><span class="line"><span class="attr">ntpdate:</span></span><br><span class="line">  <span class="string">pkg.installed:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">ntpdate</span></span><br></pre></td></tr></table></figure>
+<h3 id="DNS配置管理"><a href="#DNS配置管理" class="headerlink" title="DNS配置管理"></a>DNS配置管理</h3><p>配置DNS服务器定义在resolv.sls，控制/etc/resolv.conf配置文件:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">/etc/resolv.conf:</span></span><br><span class="line">  <span class="string">file.managed:</span></span><br><span class="line"><span class="attr">    - source:</span> <span class="attr">salt://base/files/resolv.conf</span></span><br><span class="line"><span class="attr">    - user:</span> <span class="string">root</span></span><br><span class="line"><span class="attr">    - group:</span> <span class="string">root</span></span><br><span class="line"><span class="attr">    - mode:</span> <span class="number">644</span></span><br><span class="line"><span class="attr">    - template:</span> <span class="string">jinja</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/Saltstack/">Saltstack</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/devops/">devops</a><a href="/tags/saltstack/">saltstack</a><a href="/tags/salt/">salt</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    <br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>
