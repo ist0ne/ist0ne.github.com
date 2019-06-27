@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>Openstack 安装 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
@@ -94,7 +94,9 @@
 <li>DNS 8.8.4.4, 8.8.8.8  # DNS地址</li>
 <li>Management network 192.168.0.0/24 in VLAN 501 # 管理网络</li>
 <li>Storage network 192.168.1.0/24 in VLAN 502  # 存储网络</li>
-<li>Administrative network (for Fuel) 10.20.0.0/24 in VLAN 503  # Fuel集群管理网络</li>
+<li>Administrative network (for Fuel) 10.20.0.0/24 in VLAN 503  # Fuel集群管理网络<a id="more"></a>
+
+</li>
 </ul>
 <p>服务器网卡配置：</p>
 <p>Fuel管理节点（Openstack集群管理）：</p>
@@ -110,6 +112,7 @@
 </ul>
 <p>使用一台Cisco 2960交换机，配置如下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">switch<span class="comment">#configure t</span></span><br><span class="line">Enter configuration commands, one per line.  End with CNTL/Z.</span><br><span class="line">switch(config)<span class="comment">#vlan 500</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_public</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 501</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_management</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 502</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_storage</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 503</span></span><br><span class="line">switch(config-vlan)<span class="comment">#name cloud_admin</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#vlan 510-530</span></span><br><span class="line">switch(config-vlan)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#interface range gigabitethernet1/0/5 - 10</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport access vlan 503</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport mode access</span></span><br><span class="line">switch(config-if-range)<span class="comment">#spanning-tree portfast</span></span><br><span class="line">switch(config-if-range)<span class="comment">#no shut</span></span><br><span class="line">switch(config-if-range)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#interface range gigabitethernet1/0/11 - 16</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport trunk native vlan 500</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport trunk allowed vlan 500-503</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport mode trunk</span></span><br><span class="line">switch(config-if-range)<span class="comment">#no shut</span></span><br><span class="line">switch(config-if-range)<span class="comment">#spanning-tree portfast trunk</span></span><br><span class="line">%Warning: portfast should only be enabled on ports connected to a single</span><br><span class="line"> host. Connecting hubs, concentrators, switches, bridges, etc... to this</span><br><span class="line"> interface  when portfast is enabled, can cause temporary bridging loops.</span><br><span class="line"> Use with CAUTION</span><br><span class="line"></span><br><span class="line">switch(config-if-range)<span class="comment">#exit</span></span><br><span class="line">switch(config)<span class="comment">#interface range gigabitethernet1/0/17 - 22</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport trunk allowed vlan 510-530</span></span><br><span class="line">switch(config-if-range)<span class="comment">#switchport mode trunk</span></span><br><span class="line">switch(config-if-range)<span class="comment">#no shut</span></span><br><span class="line">switch(config-if-range)<span class="comment">#spanning-tree portfast trunk</span></span><br><span class="line">switch(config-if-range)<span class="comment">#exit</span></span><br><span class="line"></span><br><span class="line">switch<span class="comment">#copy running-config startup-config</span></span><br></pre></td></tr></table></figure>
+
 <h2 id="2-Fuel管理节点安装"><a href="#2-Fuel管理节点安装" class="headerlink" title="2. Fuel管理节点安装"></a>2. Fuel管理节点安装</h2><p>从Mirantis下载镜像：<a href="https://software.mirantis.com/，本次安装使用MirantisOpenStack-5.0.1.iso镜像。" target="_blank" rel="noopener">https://software.mirantis.com/，本次安装使用MirantisOpenStack-5.0.1.iso镜像。</a></p>
 <p>通过远程管理卡进行安装，打开虚拟介质，挂载下载好的镜像，从虚拟镜像启动服务器。</p>
 <p>到如下界面时按tab键，修改参数，hostname改为你的主机名，showmenu改为yes，回车继续：</p>
@@ -133,10 +136,8 @@
 <h2 id="3-Openstack部署"><a href="#3-Openstack部署" class="headerlink" title="3. Openstack部署"></a>3. Openstack部署</h2><p>启动各节点设置磁盘Raid：</p>
 <p>控制节点和计算节点使用Raid 5；存储节点两块磁盘做Raid 1，剩下四块磁盘做单盘Raid 0（每块磁盘启动一个Ceph进程，以保证性能）。</p>
 <p>计算节点需要在BIOS中打开虚拟化选项，否则在创建虚拟机时会报如下错误：</p>
-<pre><code>Error: No valid host was found.
-</code></pre><p>查看Nova日志中有如下报错：</p>
-<pre><code>libvirtError: internal error no supported architecture for os type ‘hvm&apos;
-</code></pre><p>配置完成后从网卡启动服务器，启动完成后，回到管理界面，四台服务器已经被发现。</p>
+<pre><code>Error: No valid host was found.</code></pre><p>查看Nova日志中有如下报错：</p>
+<pre><code>libvirtError: internal error no supported architecture for os type ‘hvm&apos;</code></pre><p>配置完成后从网卡启动服务器，启动完成后，回到管理界面，四台服务器已经被发现。</p>
 <p>点击 网络 选选卡，对网络进行如下配置：</p>
 <p><img src="/images/14-09-10/openstack_network_1.png" alt="Openstack网络设置1"></p>
 <p><img src="/images/14-09-10/openstack_network_2.png" alt="Openstack网络设置2"></p>
@@ -239,7 +240,7 @@
   <p class="site-info">
     Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
     Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
-    <br>
+    </br>
     
     &copy; 2019 ist0ne
     

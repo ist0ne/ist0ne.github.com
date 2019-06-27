@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Docker 生命周期管理 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="Docker、Kubernetes、Ceph、Saltstack、OpenStack 等技术分享">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Docker 生命周期管理">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Docker 生命周期管理</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/06/22/Run-Docker/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-06-22T03:13:58.000Z">
+          2018-06-22
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h2 id="运行容器"><a href="#运行容器" class="headerlink" title="运行容器"></a>运行容器</h2><p>docker run 是启动容器的方法，容器启动后返回的是 “长ID”，我们可以通过这个长ID去访问这个容器，也可以通过启动时指定的名字访问这个容器。docker ps 能够看到容器的“短ID”，通过短ID同样可以访问这个容器，甚至只要能够唯一标识这个容器也可使用更短的ID。</p>
+<p><img src="/imgs/201806/docker_run.jpg" alt="docker run"></p>
+<p>-d 指定容器以后台方式运行；–restart 指定容器的重启策略，默认值no，容器退出时不要重启，on-failure[:max-retries] 只在容器以非0状态码退出时重启。max-retries可以指定尝试重启容器的次数；always 不管退出状态码是什么始终重启容器。当指定容器退出后，docker daemon将无限次数地重启容器。–name 指定容器的名称。</p>
+<p>容器的生命周期依赖于启动时执行的命令，只要该命令不结束，容器也就不会退出。理解了这个原理，我们就可以通过执行一个长期运行的命令来保持容器的运行状态。</p>
+<a id="more"></a>
+
+<h2 id="进入容器"><a href="#进入容器" class="headerlink" title="进入容器"></a>进入容器</h2><p>我们经常需要进到容器里去做一些工作，比如查看日志、调试、启动其他进程等。有两种方法进入容器：attach 和 exec。</p>
+<h3 id="docker-attach"><a href="#docker-attach" class="headerlink" title="docker attach"></a>docker attach</h3><p>通过 docker attach 可以 attach 到容器启动命令的终端，可通过 Ctrl+p 然后 Ctrl+q 组合键退出 attach 终端。</p>
+<h3 id="docker-exec"><a href="#docker-exec" class="headerlink" title="docker exec"></a>docker exec</h3><p>通过 docker exec 进入相同的容器。docker exec -ti <container id> bash|sh 是执行 exec 最常用的方式。-ti 以交互模式打开 pseudo-TTY，执行 bash，其结果就是打开了一个 bash 终端。</container></p>
+<p><img src="/imgs/201806/docker_attach_exec.jpg" alt="docker exec"></p>
+<h3 id="attach-VS-exec"><a href="#attach-VS-exec" class="headerlink" title="attach VS exec"></a>attach VS exec</h3><p>attach 与 exec 主要区别如下:</p>
+<ul>
+<li>attach 直接进入容器 启动命令 的终端，不会启动新的进程。</li>
+<li>exec 则是在容器中打开新的终端，并且可以启动新的进程。</li>
+</ul>
+<h2 id="容器的常用操作"><a href="#容器的常用操作" class="headerlink" title="容器的常用操作"></a>容器的常用操作</h2><p><img src="/imgs/201806/docker_cmd.jpg" alt="docker cmd"></p>
+<h3 id="stop-start-restart-kill-容器"><a href="#stop-start-restart-kill-容器" class="headerlink" title="stop/start/restart|kill 容器"></a>stop/start/restart|kill 容器</h3><p>启动、停止、重启、杀死容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker start|stop|restart|<span class="built_in">kill</span> [容器名|容器ID]</span><br></pre></td></tr></table></figure>
+
+<h3 id="pause-unpause-容器"><a href="#pause-unpause-容器" class="headerlink" title="pause/unpause 容器"></a>pause/unpause 容器</h3><p>有时我们只是希望暂时让容器暂停工作一段时间，比如要对容器的文件系统打个快照，这时可以执行 docker pause。</p>
+<p>挂起、唤醒容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pause/unpause [容器名|容器ID]</span><br></pre></td></tr></table></figure>
+
+<h3 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a>删除容器</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm -f [容器名|容器ID]</span><br></pre></td></tr></table></figure>
+
+<p>-f 参数可以强制删除运行中的容器。</p>
+<p>可以用如下命令删除所有已退出的容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm $(docker ps -a -q -f status=exited)</span><br></pre></td></tr></table></figure>
+
+<p>可以用如下命令强制删除所有容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm -f $(docker ps -a -q)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：docker rm 是删除容器，而 docker rmi 是删除镜像。</p>
+</blockquote>
+<h2 id="容器的生命周期"><a href="#容器的生命周期" class="headerlink" title="容器的生命周期"></a>容器的生命周期</h2><p>对容器的生命周期有了大致的理解，下面这张状态机很好地总结了容器各种状态之间是如何转换的。容器有五种状态：已创建、运行中、已挂起、已停止、已销毁，我们可以通过执行命令让docker在这五种状态间转换。</p>
+<p><img src="/imgs/201806/docker_run_stats.png" alt="docker 状态"></p>
+<p>docker run 是docker pull（如果镜像不存在）、docker create、docker start的复合命令。</p>
+<h2 id="容器资源限制"><a href="#容器资源限制" class="headerlink" title="容器资源限制"></a>容器资源限制</h2><h3 id="限制内存资源"><a href="#限制内存资源" class="headerlink" title="限制内存资源"></a>限制内存资源</h3><p>与操作系统类似，容器可使用的内存包括两部分：物理内存和 swap。 Docker 通过下面两组参数来控制容器内存的使用量。</p>
+<ul>
+<li>-m 或 –memory：设置内存的使用限额，例如 100M, 2G。</li>
+<li>–memory-swap：设置 <strong>内存+swap</strong> 的使用限额。</li>
+</ul>
+<p>当我们执行如下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -m 200M --memory-swap=300M ubuntu</span><br></pre></td></tr></table></figure>
+
+<p>其含义是允许该容器最多使用 200M 的内存和 100M 的 swap。默认情况下，上面两组参数为 -1，即对容器内存和 swap 的使用没有限制。如果在启动容器时只指定 -m 而不指定 –memory-swap，那么 –memory-swap 默认为 -m 的两倍。</p>
+<p>内存限额测试：<br>docker run -it -m 300M progrium/stress –vm 1 –vm-bytes 280M  未超过限额，容器启动成功</p>
+<p><img src="/imgs/201806/docker_mem_success.jpg" alt="docker mem"></p>
+<p>docker run -it -m 300M progrium/stress –vm 1 –vm-bytes 320M  超过限额，容器失败退出</p>
+<p><img src="/imgs/201806/docker_mem_fail.jpg" alt="docker mem"></p>
+<h3 id="限制CPU资源"><a href="#限制CPU资源" class="headerlink" title="限制CPU资源"></a>限制CPU资源</h3><p>Docker 可以通过 -c 或 –cpu-shares 设置容器使用 CPU 的权重。如果不指定，默认值为 1024。</p>
+<p>与内存限额不同，通过 -c 设置的 cpu share 并不是 CPU 资源的绝对数量，而是一个相对的权重值。某个容器最终能分配到的 CPU 资源取决于它的 cpu share 占所有容器 cpu share 总和的比例。</p>
+<p>CPU限额测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启动cpu_a，--cpu-shares为1024</span></span><br><span class="line"><span class="comment"># --cpu 用来设置工作线程的数量，宿主机是4核CPU，设置为4表示使用所有CPU</span></span><br><span class="line">docker run --name cpu_a -it -c 1024 -d progrium/stress --cpu 4</span><br><span class="line"><span class="comment"># 启动cpu_b，cpu-shares为512</span></span><br><span class="line"><span class="comment"># --cpu 用来设置工作线程的数量，宿主机是4核CPU，设置为4表示使用所有CPU</span></span><br><span class="line">docker run --name cpu_b -it -c 512 -d progrium/stress --cpu 4</span><br></pre></td></tr></table></figure>
+
+<p><img src="/imgs/201806/docker_cpu.jpg" alt="docker cpu"><br>CPU资源使用对比：<br><img src="/imgs/201806/docker_stats.jpg" alt="docker cpu stats"></p>
+<p>当CPU资源紧张时，–cpu-shares设置为1024的容器占用CPU的时间大约是设置为512的容器的<strong>两倍</strong>。</p>
+<h3 id="限制磁盘IO"><a href="#限制磁盘IO" class="headerlink" title="限制磁盘IO"></a>限制磁盘IO</h3><p>Block IO 是另一种可以限制容器使用的资源。Block IO 指的是磁盘的读写，docker 可通过设置权重、限制 bps 和 iops 的方式控制容器读写磁盘的带宽。</p>
+<blockquote>
+<p>注意：目前 Block IO 限额只对 direct IO（不使用文件缓存）有效。</p>
+</blockquote>
+<h4 id="block-IO-权重"><a href="#block-IO-权重" class="headerlink" title="block IO 权重"></a>block IO 权重</h4><p>默认情况下，所有容器能平等地读写磁盘，可以通过设置 –blkio-weight 参数来改变容器 block IO 的优先级。</p>
+<p>–blkio-weight 与 –cpu-shares 类似，设置的是相对权重值，默认为 500。在下面的例子中，blockio_a 读写磁盘的带宽是 blockio_b 的两倍。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --name blockio_a --blkio-weight 600 ubuntu</span><br><span class="line">docker run -it --name blockio_b --blkio-weight 300 ubuntu</span><br></pre></td></tr></table></figure>
+
+<h4 id="限制-bps-和-iops"><a href="#限制-bps-和-iops" class="headerlink" title="限制 bps 和 iops"></a>限制 bps 和 iops</h4><p>可通过以下参数控制容器的 bps 和 iops：</p>
+<ul>
+<li>–device-read-bps，限制读某个设备的 bps</li>
+<li>–device-write-bps，限制写某个设备的 bps</li>
+<li>–device-read-iops，限制读某个设备的 iops</li>
+<li>–device-write-iops，限制写某个设备的 iops</li>
+</ul>
+<p>磁盘IO限额测试：</p>
+<p><img src="/imgs/201806/docker_io.png" alt="docker IO"></p>
+<p>限制容器写 /dev/vda 的速率为 30 MB/s，通过 dd 测试在容器中写磁盘的速度。因为容器的文件系统是在 host /dev/vda 上的，在容器中写文件相当于对 host /dev/vda 进行写操作。另外，oflag=direct 指定用 direct IO 方式写文件，这样 –device-write-bps 才能生效。当去掉oflag=direct后–device-write-bps设置并没有生效，磁盘写入速度达到了 1.4 GB/s。</p>
+<h2 id="容器底层实现"><a href="#容器底层实现" class="headerlink" title="容器底层实现"></a>容器底层实现</h2><p>cgroup实现资源限额：</p>
+<ul>
+<li>通过 cgroup 可以设置进程使用 CPU、内存 和 IO 资源的限额</li>
+<li>–cpu-shares、-m、–device-write-bps 实际上就是在配置 cgroup</li>
+<li>cgroup配置目录：/sys/fs/cgroup/cpu|memory|blkio/docker</li>
+</ul>
+<p>namespace实现资源隔离：</p>
+<ul>
+<li>Mount     让容器看上去拥有整个文件系统</li>
+<li>UTS          让容器有自己hostname</li>
+<li>IPC           让容器有自己的共享内存和信号量</li>
+<li>PID           让容器有自己的进程空间</li>
+<li>Network  让容器有自己的网络空间</li>
+<li>User         让容器有自己的用户</li>
+</ul>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+  
+
+	<section id="comment" class="comment">
+		<div id="gitment"></div>
+	</section>
+	<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+	<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+	<script>
+		var gitment = new Gitment({
+			owner: 'ist0ne',
+			repo: 'gitment',
+			oauth: {
+				client_id: 'a3a5af94aef00fdf0c24',
+				client_secret: '3d47316b6b7d0b98ba405da19a65457357256f2d',
+			},
+		})
+		gitment.render('gitment')
+	</script>
+
+
+
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

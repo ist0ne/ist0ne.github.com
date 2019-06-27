@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>Saltstack：网站架构介绍 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
@@ -105,6 +105,8 @@
 </ol>
 <p><img src="/images/14-05-27/net.png" alt="网络架构"></p>
 <p>说明:上面网络架构未按实际服务器数量画出，具体服务器见角色划分部分。</p>
+<a id="more"></a>
+
 <h3 id="系统架构"><a href="#系统架构" class="headerlink" title="系统架构"></a>系统架构</h3><ol>
 <li>统一管理：整个系统通过Salt进行配置管理，所有配置文件统一存储到SVN中，通过SVN版本控制能够在系统故障时轻松回退到上一个正常版本。</li>
 <li>代码部署：通过命令行部署工具从SVN中检出代码并部署到WEB前端，做到简单轻松部署。</li>
@@ -215,7 +217,7 @@
   <p class="site-info">
     Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
     Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
-    <br>
+    </br>
     
     &copy; 2019 ist0ne
     

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html>
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>Saltstack：安装 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
@@ -89,25 +89,37 @@
 <h3 id="Salt-Master安装"><a href="#Salt-Master安装" class="headerlink" title="Salt Master安装"></a>Salt Master安装</h3><p>注意：安装前确保主机名已按角色划分部分进行配置。</p>
 <p>安装salt-master：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># yum install -y salt-master</span></span><br></pre></td></tr></table></figure>
+
 <p>修改配置文件：/etc/salt/master，使salt监听在内网网卡上。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">interface: 172.16.100.81</span><br></pre></td></tr></table></figure>
+
 <p>启动Salt Master：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/init.d/salt-master start</span></span><br></pre></td></tr></table></figure>
+
 <p>查看启动情况，4505端口处于监听状态：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># netstat -tunlp |grep 4505</span></span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
 <h3 id="Salt-Minion安装"><a href="#Salt-Minion安装" class="headerlink" title="Salt Minion安装"></a>Salt Minion安装</h3><p>注意：安装前确保主机名已按角色划分部分进行配置。</p>
 <p>安装salt-minion：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># yum install -y salt-minion</span></span><br></pre></td></tr></table></figure>
+
 <p>修改配置文件：/etc/salt/minion，使其连接到master。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">master: 172.16.100.81</span><br></pre></td></tr></table></figure>
+
 <p>启动Salt Minion：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/init.d/salt-minion start</span></span><br></pre></td></tr></table></figure>
+
 <p>查看启动情况，4506端口处于监听状态：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># netstat -tunlp |grep 4506</span></span><br></pre></td></tr></table></figure>
+
 <h3 id="在Salt-Master上为Salt-Minion授权"><a href="#在Salt-Master上为Salt-Minion授权" class="headerlink" title="在Salt Master上为Salt Minion授权"></a>在Salt Master上为Salt Minion授权</h3><p>查看Salt Minion是否已经向Salt Master请求授权：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># salt-key -L</span></span><br><span class="line">Accepted Keys:</span><br><span class="line">Unaccepted Keys:</span><br><span class="line">admin.grid.mall.com</span><br></pre></td></tr></table></figure>
+
 <p>为Salt Minion授权：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># salt-key -a admin.grid.mall.com</span></span><br></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -170,7 +182,7 @@
   <p class="site-info">
     Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
     Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
-    <br>
+    </br>
     
     &copy; 2019 ist0ne
     
