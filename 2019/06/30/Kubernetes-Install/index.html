@@ -84,7 +84,10 @@
   <div class="article-content">
     <div class="entry">
       
-        <h2 id="Kubernetes版本选择"><a href="#Kubernetes版本选择" class="headerlink" title="Kubernetes版本选择"></a>Kubernetes版本选择</h2><p>Kubernetes 1.14是2019年发布的第一个正式版本。新版本有31个增强功能：其中有10个功能进入了生产可用状态，12个进入了beta版本，另外，增加了7个新功能。1.14版本的主题是可扩展性，支持更多Kubernetes工作负载，其中三个主要功能正式推出，以及一个重要的安全功能转向beta。与之前发布的Kubernetes版本相比，1.14版本中的更多功能逐渐稳定，这是大家期望的重要里程碑。</p>
+        <blockquote>
+<p><strong>视频课程地址：</strong><a href="https://www.bilibili.com/video/av49387629?from=search&seid=4418298671230182069" target="_blank" rel="noopener">戳我开始学习</a></p>
+</blockquote>
+<h2 id="Kubernetes版本选择"><a href="#Kubernetes版本选择" class="headerlink" title="Kubernetes版本选择"></a>Kubernetes版本选择</h2><p>Kubernetes 1.14是2019年发布的第一个正式版本。新版本有31个增强功能：其中有10个功能进入了生产可用状态，12个进入了beta版本，另外，增加了7个新功能。1.14版本的主题是可扩展性，支持更多Kubernetes工作负载，其中三个主要功能正式推出，以及一个重要的安全功能转向beta。与之前发布的Kubernetes版本相比，1.14版本中的更多功能逐渐稳定，这是大家期望的重要里程碑。</p>
 <ul>
 <li><strong>生产级别的Windwos节点支持</strong> Kubernetes1.14版本正式支持将Windows节点添加为工作节点，这意味着可以在生产环境使用Windows容器了，使庞大的Windows应用生态系统能够利用Kubernetes平台的强大功能了。</li>
 <li><strong>Kubectl的更新</strong> 新版本Kubectl可以使用声明性Resource Config来管理资源。kubectl的文档也从头进行编写，可参考<a href="https://kubectl.docs.kubernetes.io" target="_blank" rel="noopener">文档</a>。</li>
@@ -220,7 +223,7 @@ mode: &quot;ipvs&quot;
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
-kubernetesVersion: v1.14.1
+kubernetesVersion: v1.14.3
 apiServer:
     certSANs:
     - &quot;apiserver.hipstershop.cn&quot;

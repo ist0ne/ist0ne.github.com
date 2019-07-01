@@ -84,7 +84,10 @@
   <div class="article-content">
     <div class="entry">
       
-        <h2 id="控制平面升级"><a href="#控制平面升级" class="headerlink" title="控制平面升级"></a>控制平面升级</h2><p>只有master节点需要执行如下操作，需要逐节点操作。将集群从当前的v1.14.3升级到v1.15.0。</p>
+        <blockquote>
+<p><strong>视频课程地址：</strong><a href="https://www.bilibili.com/video/av49387629?from=search&seid=4418298671230182069" target="_blank" rel="noopener">戳我开始学习</a></p>
+</blockquote>
+<h2 id="控制平面升级"><a href="#控制平面升级" class="headerlink" title="控制平面升级"></a>控制平面升级</h2><p>只有master节点需要执行如下操作，需要逐节点操作。将集群从当前的v1.14.3升级到v1.15.0。</p>
 <p>列出可用的kubeadm软件包</p>
 <pre><code>yum list --showduplicates kubeadm --disableexcludes=kubernetes</code></pre><p>安装kubeadm新版本软件包</p>
 <pre><code>yum install -y kubeadm-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>确认kubeadm为正确的版本</p>
