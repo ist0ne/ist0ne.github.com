@@ -65,15 +65,15 @@
 
   
     
-    <h3 class="article-title"><a href="/2018/09/14/Kubernetes-Update/"><span>Kubernetes 集群升级</span></a></h3>
+    <h3 class="article-title"><a href="/2019/07/01/Kubernetes-Update/"><span>Kubernetes 集群升级</span></a></h3>
     
   
 
   <div class="article-top-meta">
     <span class="posted-on">
-      <a href="/2018/09/14/Kubernetes-Update/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-09-14T08:56:49.000Z">
-          2018-09-14
+      <a href="/2019/07/01/Kubernetes-Update/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-07-01T08:56:49.000Z">
+          2019-07-01
         </time>
       </a>
     </span>
@@ -85,8 +85,31 @@
   <div class="article-content">
     <div class="entry">
       
-        <h3 id="控制平面升级"><a href="#控制平面升级" class="headerlink" title="控制平面升级"></a>控制平面升级</h3><p>只有master节点需要执行如下操作，需要逐节点操作。将集群从当前的v1.11.2升级到v1.11.3。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 升级kubeadm</span></span><br><span class="line">[root@k8s-ha-1 ~]<span class="comment"># export VERSION=$(curl -sSL https://dl.k8s.io/release/stable.txt)</span></span><br><span class="line">[root@k8s-ha-1 ~]<span class="comment"># export ARCH=amd64</span></span><br><span class="line">[root@k8s-ha-1 ~]<span class="comment"># curl -sSL https://dl.k8s.io/release/$&#123;VERSION&#125;/bin/linux/$&#123;ARCH&#125;/kubeadm &gt;/usr/bin/kubeadm</span></span><br><span class="line">[root@k8s-ha-1 ~]<span class="comment"># chmod a+rx /usr/bin/kubeadm</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看升级计划</span></span><br><span class="line">[root@k8s-ha-1 ~]<span class="comment"># kubeadm upgrade plan</span></span><br><span class="line">[preflight] Running pre-flight checks.</span><br><span class="line">[upgrade] Making sure the cluster is healthy:</span><br><span class="line">[upgrade/config] Making sure the configuration is correct:</span><br><span class="line">[upgrade/config] Reading configuration from the cluster...</span><br><span class="line">[upgrade/config] FYI: You can look at this config file with <span class="string">'kubectl -n kube-system get cm kubeadm-config -oyaml'</span></span><br><span class="line">[endpoint] WARNING: port specified <span class="keyword">in</span> api.controlPlaneEndpoint overrides api.bindPort <span class="keyword">in</span> the controlplane address</span><br><span class="line">[upgrade] Fetching available versions to upgrade to</span><br><span class="line">[upgrade/versions] Cluster version: v1.11.2</span><br><span class="line">[upgrade/versions] kubeadm version: v1.11.3</span><br><span class="line">[upgrade/versions] Latest stable version: v1.11.3</span><br><span class="line">[upgrade/versions] Latest version <span class="keyword">in</span> the v1.11 series: v1.11.3</span><br><span class="line"></span><br><span class="line">Components that must be upgraded manually after you have upgraded the control plane with <span class="string">'kubeadm upgrade apply'</span>:</span><br><span class="line">COMPONENT   CURRENT       AVAILABLE</span><br><span class="line">Kubelet     1 x v1.11.2   v1.11.3</span><br><span class="line">            2 x v1.11.3   v1.11.3</span><br><span class="line"></span><br><span class="line">Upgrade to the latest version <span class="keyword">in</span> the v1.11 series:</span><br><span class="line"></span><br><span class="line">COMPONENT            CURRENT   AVAILABLE</span><br><span class="line">API Server           v1.11.2   v1.11.3</span><br><span class="line">Controller Manager   v1.11.2   v1.11.3</span><br><span class="line">Scheduler            v1.11.2   v1.11.3</span><br><span class="line">Kube Proxy           v1.11.2   v1.11.3</span><br><span class="line">CoreDNS              1.1.3     1.1.3</span><br><span class="line">Etcd                 3.2.18    3.2.18</span><br><span class="line"></span><br><span class="line">You can now apply the upgrade by executing the following <span class="built_in">command</span>:</span><br><span class="line"></span><br><span class="line">    kubeadm upgrade apply v1.11.3</span><br><span class="line"></span><br><span class="line">_____________________________________________________________________</span><br><span class="line"></span><br><span class="line"><span class="comment"># 升级控制节点</span></span><br><span class="line">[root@k8s-ha-1 ~]<span class="comment"># kubeadm upgrade apply v1.11.3</span></span><br><span class="line">[preflight] Running pre-flight checks.</span><br><span class="line">[upgrade] Making sure the cluster is healthy:</span><br><span class="line">[upgrade/config] Making sure the configuration is correct:</span><br><span class="line">[upgrade/config] Reading configuration from the cluster...</span><br><span class="line">[upgrade/config] FYI: You can look at this config file with <span class="string">'kubectl -n kube-system get cm kubeadm-config -oyaml'</span></span><br><span class="line">[endpoint] WARNING: port specified <span class="keyword">in</span> api.controlPlaneEndpoint overrides api.bindPort <span class="keyword">in</span> the controlplane address</span><br><span class="line">[upgrade/apply] Respecting the --cri-socket flag that is <span class="built_in">set</span> with higher priority than the config file.</span><br><span class="line">[upgrade/version] You have chosen to change the cluster version to <span class="string">"v1.11.3"</span></span><br><span class="line">[upgrade/versions] Cluster version: v1.11.3</span><br><span class="line">[upgrade/versions] kubeadm version: v1.11.3</span><br><span class="line">[upgrade/confirm] Are you sure you want to proceed with the upgrade? [y/N]: y</span><br><span class="line">[upgrade/prepull] Will prepull images <span class="keyword">for</span> components [kube-apiserver kube-controller-manager kube-scheduler etcd]</span><br><span class="line">[upgrade/apply] Upgrading your Static Pod-hosted control plane to version <span class="string">"v1.11.3"</span>...</span><br><span class="line">Static pod: kube-apiserver-k8s-ha-1 <span class="built_in">hash</span>: 59b9d4f724df54d37f5379586005e80b</span><br><span class="line">Static pod: kube-controller-manager-k8s-ha-1 <span class="built_in">hash</span>: c844216e25c7ade0ed6358313b2ae382</span><br><span class="line">Static pod: kube-scheduler-k8s-ha-1 <span class="built_in">hash</span>: a00c35e56ebd0bdfcd77d53674a5d2a1</span><br><span class="line">[upgrade/staticpods] Writing new Static Pod manifests to <span class="string">"/etc/kubernetes/tmp/kubeadm-upgraded-manifests350573529"</span></span><br><span class="line">[controlplane] wrote Static Pod manifest <span class="keyword">for</span> component kube-apiserver to <span class="string">"/etc/kubernetes/tmp/kubeadm-upgraded-manifests350573529/kube-apiserver.yaml"</span></span><br><span class="line">[controlplane] wrote Static Pod manifest <span class="keyword">for</span> component kube-controller-manager to <span class="string">"/etc/kubernetes/tmp/kubeadm-upgraded-manifests350573529/kube-controller-manager.yaml"</span></span><br><span class="line">[controlplane] wrote Static Pod manifest <span class="keyword">for</span> component kube-scheduler to <span class="string">"/etc/kubernetes/tmp/kubeadm-upgraded-manifests350573529/kube-scheduler.yaml"</span></span><br><span class="line">[certificates] Using the existing etcd/ca certificate and key.</span><br><span class="line">[certificates] Using the existing apiserver-etcd-client certificate and key.</span><br><span class="line">[upgrade/staticpods] Moved new manifest to <span class="string">"/etc/kubernetes/manifests/kube-apiserver.yaml"</span> and backed up old manifest to <span class="string">"/etc/kubernetes/tmp/kubeadm-backup-manifests-2018-09-14-07-36-57/kube-apiserver.yaml"</span></span><br><span class="line">[upgrade/staticpods] Waiting <span class="keyword">for</span> the kubelet to restart the component</span><br><span class="line">Static pod: kube-apiserver-k8s-ha-1 <span class="built_in">hash</span>: 59b9d4f724df54d37f5379586005e80b</span><br><span class="line">Static pod: kube-apiserver-k8s-ha-1 <span class="built_in">hash</span>: 59b9d4f724df54d37f5379586005e80b</span><br><span class="line">Static pod: kube-apiserver-k8s-ha-1 <span class="built_in">hash</span>: 50141d1c8e0a130d159fa29fef61933c</span><br><span class="line">[apiclient] Found 3 Pods <span class="keyword">for</span> label selector component=kube-apiserver</span><br><span class="line">[upgrade/staticpods] Component <span class="string">"kube-apiserver"</span> upgraded successfully!</span><br><span class="line">[upgrade/staticpods] Moved new manifest to <span class="string">"/etc/kubernetes/manifests/kube-controller-manager.yaml"</span> and backed up old manifest to <span class="string">"/etc/kubernetes/tmp/kubeadm-backup-manifests-2018-09-14-07-36-57/kube-controller-manager.yaml"</span></span><br><span class="line">[upgrade/staticpods] Waiting <span class="keyword">for</span> the kubelet to restart the component</span><br><span class="line">Static pod: kube-controller-manager-k8s-ha-1 <span class="built_in">hash</span>: c844216e25c7ade0ed6358313b2ae382</span><br><span class="line">Static pod: kube-controller-manager-k8s-ha-1 <span class="built_in">hash</span>: c844216e25c7ade0ed6358313b2ae382</span><br><span class="line">Static pod: kube-controller-manager-k8s-ha-1 <span class="built_in">hash</span>: c844216e25c7ade0ed6358313b2ae382</span><br><span class="line">Static pod: kube-controller-manager-k8s-ha-1 <span class="built_in">hash</span>: bdbce0400587a45fd6b7b4a4523eaff5</span><br><span class="line">[apiclient] Found 3 Pods <span class="keyword">for</span> label selector component=kube-controller-manager</span><br><span class="line">[upgrade/staticpods] Component <span class="string">"kube-controller-manager"</span> upgraded successfully!</span><br><span class="line">[upgrade/staticpods] Moved new manifest to <span class="string">"/etc/kubernetes/manifests/kube-scheduler.yaml"</span> and backed up old manifest to <span class="string">"/etc/kubernetes/tmp/kubeadm-backup-manifests-2018-09-14-07-36-57/kube-scheduler.yaml"</span></span><br><span class="line">[upgrade/staticpods] Waiting <span class="keyword">for</span> the kubelet to restart the component</span><br><span class="line">Static pod: kube-scheduler-k8s-ha-1 <span class="built_in">hash</span>: a00c35e56ebd0bdfcd77d53674a5d2a1</span><br><span class="line">Static pod: kube-scheduler-k8s-ha-1 <span class="built_in">hash</span>: a00c35e56ebd0bdfcd77d53674a5d2a1</span><br><span class="line">Static pod: kube-scheduler-k8s-ha-1 <span class="built_in">hash</span>: 009228e74aef4d7babd7968782118d5e</span><br><span class="line">[apiclient] Found 3 Pods <span class="keyword">for</span> label selector component=kube-scheduler</span><br><span class="line">[upgrade/staticpods] Component <span class="string">"kube-scheduler"</span> upgraded successfully!</span><br><span class="line">[uploadconfig] storing the configuration used <span class="keyword">in</span> ConfigMap <span class="string">"kubeadm-config"</span> <span class="keyword">in</span> the <span class="string">"kube-system"</span> Namespace</span><br><span class="line">[kubelet] Creating a ConfigMap <span class="string">"kubelet-config-1.11"</span> <span class="keyword">in</span> namespace kube-system with the configuration <span class="keyword">for</span> the kubelets <span class="keyword">in</span> the cluster</span><br><span class="line">[kubelet] Downloading configuration <span class="keyword">for</span> the kubelet from the <span class="string">"kubelet-config-1.11"</span> ConfigMap <span class="keyword">in</span> the kube-system namespace</span><br><span class="line">[kubelet] Writing kubelet configuration to file <span class="string">"/var/lib/kubelet/config.yaml"</span></span><br><span class="line">[patchnode] Uploading the CRI Socket information <span class="string">"/var/run/dockershim.sock"</span> to the Node API object <span class="string">"k8s-ha-1"</span> as an annotation</span><br><span class="line">[bootstraptoken] configured RBAC rules to allow Node Bootstrap tokens to post CSRs <span class="keyword">in</span> order <span class="keyword">for</span> nodes to get long term certificate credentials</span><br><span class="line">[bootstraptoken] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token</span><br><span class="line">[bootstraptoken] configured RBAC rules to allow certificate rotation <span class="keyword">for</span> all node client certificates <span class="keyword">in</span> the cluster</span><br><span class="line">[addons] Applied essential addon: CoreDNS</span><br><span class="line">[endpoint] WARNING: port specified <span class="keyword">in</span> api.controlPlaneEndpoint overrides api.bindPort <span class="keyword">in</span> the controlplane address</span><br><span class="line">[addons] Applied essential addon: kube-proxy</span><br><span class="line"></span><br><span class="line">[upgrade/successful] SUCCESS! Your cluster was upgraded to <span class="string">"v1.11.3"</span>. Enjoy!</span><br><span class="line"></span><br><span class="line">[upgrade/kubelet] Now that your control plane is upgraded, please proceed with upgrading your kubelets <span class="keyword">if</span> you haven<span class="string">'t already done so.</span></span><br></pre></td></tr></table></figure>
+        <h2 id="控制平面升级"><a href="#控制平面升级" class="headerlink" title="控制平面升级"></a>控制平面升级</h2><p>只有master节点需要执行如下操作，需要逐节点操作。将集群从当前的v1.14.3升级到v1.15.0。</p>
+<p>列出可用的kubeadm软件包</p>
+<pre><code>yum list --showduplicates kubeadm --disableexcludes=kubernetes</code></pre><p>安装kubeadm新版本软件包</p>
+<pre><code>yum install -y kubeadm-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>确认kubeadm为正确的版本</p>
+<pre><code>kubeadm version</code></pre><p>查看升级计划</p>
+<pre><code>kubeadm upgrade plan</code></pre><p>升级第一个控制节点</p>
+<pre><code>kubeadm upgrade apply v1.15.0</code></pre><p>升级kubelet软件包</p>
+<pre><code>yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>重启kubelet服务</p>
+<pre><code>systemctl restart kubelet</code></pre><h2 id="升级第二、三个控制节点"><a href="#升级第二、三个控制节点" class="headerlink" title="升级第二、三个控制节点"></a>升级第二、三个控制节点</h2><p>升级控制节点</p>
+<pre><code>kubeadm upgrade node</code></pre><p>升级kubelet、kubectl软件包</p>
+<pre><code>yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>重启kubelet服务</p>
+<pre><code>systemctl daemon-reload
+systemctl restart kubelet</code></pre><h2 id="升级工作节点"><a href="#升级工作节点" class="headerlink" title="升级工作节点"></a>升级工作节点</h2><p>逐节点升级工作节点</p>
+<p>升级kubeadm软件包</p>
+<pre><code>yum install -y kubeadm-1.15.x-0 --disableexcludes=kubernetes</code></pre><p>驱逐节点上的pod并标记为不可调度</p>
+<pre><code>kubectl drain k8s-s1 --ignore-daemonsets</code></pre><p>升级kubelet、kubectl软件包</p>
+<pre><code>yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>更新kubelet配置文件</p>
+<pre><code>kubeadm upgrade node</code></pre><p>重启kubelet服务</p>
+<pre><code>systemctl daemon-reload
+systemctl restart kubelet</code></pre><p>查看kubelet状态</p>
+<pre><code>systemctl status kubelet</code></pre><p>标注节点为可调度</p>
+<pre><code>kubectl uncordon k8s-s1</code></pre><p>确定各节点状态为Ready</p>
+<pre><code>kubectl get nodes</code></pre><h2 id="从失败状态恢复"><a href="#从失败状态恢复" class="headerlink" title="从失败状态恢复"></a>从失败状态恢复</h2><p>如果 kubeadm upgrade 执行失败，它将尝试执行回滚。因此，如果这种情况发生在第一个 master 身上，那么集群仍然完好无损的可能性很大。你可以再次运行 kubeadm upgrade apply，因为它是幂等的，最终应确保实际状态是你声明的所需状态。你可以使用参数 –force 运行 kubeadm upgrade apply 命令更改运行的集群为 y.y.y –&gt; x.x.x，它可用于从糟糕的状态中恢复过来。</p>
+<p>如果 kubeadm upgrade apply 是在其中一个辅助 master 上失败，则仍然有一个正在工作的已经升级的集群，但辅助 master 的状态有些不确定。你将不得不找出哪里出了问题，并手动加入辅助 master。如上所述，有时升级其中一个辅助 master 时，首先等待重新启动的静态 pod 失败，但在一两分钟的暂停后简单地重复该操作时会成功。</p>
+
       
     </div>
 
@@ -113,7 +136,7 @@
       <span>
         <i class="icon-comments"></i>
         <span>
-          <a href="/2018/09/14/Kubernetes-Update/#comment">评论</a>
+          <a href="/2019/07/01/Kubernetes-Update/#comment">评论</a>
         </span>
       </span>
     </div>
@@ -127,15 +150,15 @@
 
   
     
-    <h3 class="article-title"><a href="/2018/09/13/Kubernetes-Install/"><span>高可用 Kubernetes 集群部署</span></a></h3>
+    <h3 class="article-title"><a href="/2019/06/30/Kubernetes-Install/"><span>高可用 Kubernetes 集群部署</span></a></h3>
     
   
 
   <div class="article-top-meta">
     <span class="posted-on">
-      <a href="/2018/09/13/Kubernetes-Install/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-09-13T04:09:18.000Z">
-          2018-09-13
+      <a href="/2019/06/30/Kubernetes-Install/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-06-30T04:09:18.000Z">
+          2019-06-30
         </time>
       </a>
     </span>
@@ -147,11 +170,241 @@
   <div class="article-content">
     <div class="entry">
       
-        <p>我在前面介绍容器技术基础知识，本篇主要介绍通过kubeadm部署高可用容器编排工具Kubernetes。跟很多基础设施领域先有工程实践、后有方法论的发展路线不同，Kubernetes 项目的理论基础则要比工程实践走得靠前得多，这当然要归功于 Google 公司在 2015 年 4 月发布的 Borg 论文了。Borg 系统，一直以来都被誉为 Google 公司内部最强大的“秘密武器”。因为，相比于 Spanner、BigTable 等相对上层的项目，Borg 要承担的责任，是承载 Google 公司整个基础设施的核心依赖。在 Google 公司已经公开发表的基础设施体系论文中，Borg 项目当仁不让地位居整个基础设施技术栈的最底层。</p>
-<p><img src="/imgs/201809/borg.jpg" alt="Google 架构"></p>
-<p>Kubernetes 项目的架构，跟它的原型项目 Borg 非常类似，都由 Master 和 Node 两种节点组成，而这两种角色分别对应着控制节点和计算节点。</p>
-<p><img src="/imgs/201809/k8s_jiagou.png" alt="Kubernetes 架构"></p>
-<p>其中，控制节点，即 Master 节点，由三个紧密协作的独立组件组合而成，它们分别是负责 API 服务的 kube-apiserver、负责调度的 kube-scheduler，以及负责容器编排的 kube-controller-manager。整个集群的持久化数据，则由 kube-apiserver 处理后保存在 ectd 中。Kubernetes 的高可用即为控制节点和 etcd 数据库的高可用。下面开始介绍高可用 Kubernetes 集群的搭建步骤。</p>
+        <h2 id="Kubernetes版本选择"><a href="#Kubernetes版本选择" class="headerlink" title="Kubernetes版本选择"></a>Kubernetes版本选择</h2><p>Kubernetes 1.14是2019年发布的第一个正式版本。新版本有31个增强功能：其中有10个功能进入了生产可用状态，12个进入了beta版本，另外，增加了7个新功能。1.14版本的主题是可扩展性，支持更多Kubernetes工作负载，其中三个主要功能正式推出，以及一个重要的安全功能转向beta。与之前发布的Kubernetes版本相比，1.14版本中的更多功能逐渐稳定，这是大家期望的重要里程碑。</p>
+<ul>
+<li><strong>生产级别的Windwos节点支持</strong> Kubernetes1.14版本正式支持将Windows节点添加为工作节点，这意味着可以在生产环境使用Windows容器了，使庞大的Windows应用生态系统能够利用Kubernetes平台的强大功能了。</li>
+<li><strong>Kubectl的更新</strong> 新版本Kubectl可以使用声明性Resource Config来管理资源。kubectl的文档也从头进行编写，可参考<a href="https://kubectl.docs.kubernetes.io" target="_blank" rel="noopener">文档</a>。</li>
+<li><strong>持久化本地Volumes</strong> 本地SSD比远程磁盘能提供更好的性能。对性能要求比较高的数据库和分布式文件系统可以使用久化本地存储。</li>
+</ul>
+<h2 id="准备节点"><a href="#准备节点" class="headerlink" title="准备节点"></a>准备节点</h2><p>通过kubeadm部署高可用Kubernetes集群有两种架构，一种是将数据平面（etcd集群）和控制平面（Kubernetes控制节点）部署在一起，另一种是分开部署，其中部署在一起可以节省服务器，但是数据平面和控制平面耦合在一起，当一台机器故障时，数据平面和控制平面将同时出现问题。</p>
+<p>数据平面和控制平面共用节点：</p>
+<p><img src="imgs/201907/kubeadm-ha-topology-stacked-etcd.png" alt="数据平面和控制平面共用节点"></p>
+<p>数据平面和控制平面不共用节点：</p>
+<p><img src="imgs/201907/kubeadm-ha-topology-external-etcd.png" alt="数据平面和控制平面不共用节点"></p>
+<p>我们按照数据平面和控制平面共用节点进行高可用集群的部署。</p>
+<h2 id="升级各节点系统"><a href="#升级各节点系统" class="headerlink" title="升级各节点系统"></a>升级各节点系统</h2><p>操作系统我们选择 CentOS 7 最新版（7.6.1810），如果不是最新版，可参考如下升级到最新版。</p>
+<p>按如下内容，编辑 /etc/yum.repos.d/CentOS-Base.repo</p>
+<pre><code># CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the
+# remarked out baseurl= line instead.
+#
+#
+
+[base]
+name=CentOS-$releasever - Base
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=os&amp;infra=$infra
+baseurl=http://mirrors.163.com/centos/7.6.1810/os/$basearch/
+#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#released updates
+[updates]
+name=CentOS-$releasever - Updates
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=updates&amp;infra=$infra
+baseurl=http://mirrors.163.com/centos/7.6.1810/updates/$basearch/
+#baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#additional packages that may be useful
+[extras]
+name=CentOS-$releasever - Extras
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=extras&amp;infra=$infra
+baseurl=http://mirrors.163.com/centos/7.6.1810/extras/$basearch/
+#baseurl=http://mirror.centos.org/centos/$releasever/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-$releasever - Plus
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=centosplus&amp;infra=$infra
+baseurl=http://mirrors.163.com/centos/7.6.1810/centosplus/$basearch/
+#baseurl=http://mirror.centos.org/centos/$releasever/centosplus/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</code></pre><p>升级系统并重启</p>
+<pre><code>$ yum update -y
+$ reboot</code></pre><p>关闭SELinux，编辑 /etc/sysconfig/selinux，设置SELINUX=disabled</p>
+<pre><code>$ setenforce 0</code></pre><p>配置内核参数</p>
+<pre><code>$ cat &lt;&lt;EOF &gt;  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+vm.swappiness = 0
+EOF
+$ sysctl --system</code></pre><p>Kubernetes v1.8+ 要求关闭系统 Swap，请在所有节点利用以下指令关闭：</p>
+<pre><code>$ swapoff -a &amp;&amp; sysctl -w vm.swappiness=0
+
+$ vi /etc/fstab
+注释swap相关的行</code></pre><p>设置各节点主机名：</p>
+<pre><code>hostnamectl set-hostname k8s-m1
+hostnamectl set-hostname k8s-m2
+hostnamectl set-hostname k8s-m3
+hostnamectl set-hostname k8s-s1
+hostnamectl set-hostname k8s-s2</code></pre><p>修改hosts，添加如下行：</p>
+<pre><code>172.16.10.48 k8s-m001
+172.16.10.49 k8s-m002
+172.16.10.50 k8s-m003
+172.16.10.51 k8s-s001
+172.16.10.52 k8s-s002
+172.16.10.53 k8s-s002</code></pre><h2 id="配置所有节点加载ipvs相关模块（kube-proxy-使用ipvs模式）"><a href="#配置所有节点加载ipvs相关模块（kube-proxy-使用ipvs模式）" class="headerlink" title="配置所有节点加载ipvs相关模块（kube-proxy 使用ipvs模式）"></a>配置所有节点加载ipvs相关模块（kube-proxy 使用ipvs模式）</h2><p>加载相关内核模块</p>
+<pre><code>$ cat &gt; /etc/sysconfig/modules/ipvs.modules &lt;&lt; EOF
+#!/bin/bash
+modprobe -- ip_vs
+modprobe -- ip_vs_rr
+modprobe -- ip_vs_wrr
+modprobe -- ip_vs_sh
+modprobe -- nf_conntrack_ipv4
+EOF
+
+$ chmod 755 /etc/sysconfig/modules/ipvs.modules &amp;&amp; bash /etc/sysconfig/modules/ipvs.modules &amp;&amp; lsmod | grep -e ip_vs -e nf_conntrack_ipv4</code></pre><p>安装相关软件包</p>
+<pre><code>$ yum install -y ipset ipvsadm</code></pre><h2 id="配置ssh-key认证"><a href="#配置ssh-key认证" class="headerlink" title="配置ssh key认证"></a>配置ssh key认证</h2><p>在主节点1上执行生成公钥</p>
+<pre><code>$ ssh-keygen</code></pre><p>拷贝 /root/.ssh/id_rsa.pub 内容到主节点2和主节点3上</p>
+<pre><code>$ vi /home/centos/.ssh/authorized_keys</code></pre><h2 id="所有节点安装-Docker"><a href="#所有节点安装-Docker" class="headerlink" title="所有节点安装 Docker"></a>所有节点安装 Docker</h2><p>推荐安装 1.13.1, 17.03, 17.06, 17.09, 18.06, 18.09，但是18.09+是未经测试的，不推荐使用。</p>
+<p>安装依赖包</p>
+<pre><code>$ yum install -y yum-utils \
+device-mapper-persistent-data \
+lvm2</code></pre><p>添加docker yum仓库</p>
+<pre><code>$  yum-config-manager \
+--add-repo \
+https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo</code></pre><p>安装 Docker</p>
+<pre><code>yum install -y docker-ce docker-ce-cli containerd.io</code></pre><p>配置 Docker</p>
+<pre><code>$ cat &lt;&lt; EOF &gt; /etc/docker/daemon.json
+{
+&quot;insecure-registry&quot;: [
+    &quot;hub.hipstershop.cn&quot;,
+    &quot;reg.hipstershop.cn&quot;
+],
+&quot;registry-mirror&quot;: &quot;https://q00c7e05.mirror.aliyuncs.com&quot;,
+&quot;graph&quot;: &quot;/data1/docker&quot;
+}
+EOF</code></pre><p>启动Docker</p>
+<pre><code>systemctl enable docker &amp;&amp; systemctl start docker</code></pre><h2 id="所有节点安装kubeadm-kubelet-and-kubectl"><a href="#所有节点安装kubeadm-kubelet-and-kubectl" class="headerlink" title="所有节点安装kubeadm, kubelet and kubectl"></a>所有节点安装kubeadm, kubelet and kubectl</h2><p>kubelet版本要与待安装的Kubernetes版本相同，否则可能会出现一些难以预料的问题。</p>
+<pre><code>$ cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+       http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF</code></pre><p>通过 yum 安装软件包</p>
+<pre><code>yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes</code></pre><p>设置开机自动启动kubelet</p>
+<pre><code>systemctl enable kubelet.service</code></pre><h2 id="使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）"><a href="#使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）" class="headerlink" title="使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）"></a>使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）</h2><h3 id="创建第一个节点控制节点"><a href="#创建第一个节点控制节点" class="headerlink" title="创建第一个节点控制节点"></a>创建第一个节点控制节点</h3><p>创建配置文件 kubeadm-config.yaml：</p>
+<pre><code>apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: &quot;ipvs&quot;
+---
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+kubernetesVersion: v1.14.1
+apiServer:
+    certSANs:
+    - &quot;apiserver.hipstershop.cn&quot;
+    - &quot;172.16.1.50&quot;
+    - &quot;172.16.10.48&quot;
+    - &quot;172.16.10.49&quot;
+    - &quot;172.16.10.50&quot;
+    extraArgs:
+        allow-privileged: &quot;true&quot;
+        feature-gates: &quot;VolumeSnapshotDataSource=true,CSINodeInfo=true,    CSIDriverRegistry=true&quot;
+controlPlaneEndpoint: &quot;apiserver.hipstershop.cn:6443&quot;
+etcd:
+    local:
+        dataDir: /data1/etcd
+networking:
+    # This CIDR is a Canal default. Substitute or remove for your CNI     provider.
+    podSubnet: &quot;10.244.0.0/16&quot;
+controllerManager:
+    extraArgs:
+        address: 0.0.0.0
+scheduler:
+    extraArgs:
+        address: 0.0.0.0
+imageRepository: gcr.azk8s.cn/google-containers</code></pre><blockquote>
+<p>172.16.1.50 为APIServer的负载均衡IP，6443为负载均衡的端口。如果没有负载均可以通过 HaProxy自行搭建，参见<a href="https://github.com/findsec-cn/k200/raw/master/1.高可用性集群部署/kHaProxy负载均衡配置.md" target="_blank" rel="noopener">HaProxy负载均衡配置</a>。如果公司有硬件负载均衡如f5、Netscaler等可以直接使用；如果在各云平台可以使用各云平台的负载均衡（如阿里云的SLB）。<br>如果你不能直接访问gcr.io，需要设置imageRepository: gcr.azk8s.cn/google-containers。</p>
+</blockquote>
+<h3 id="初始化第一个节点"><a href="#初始化第一个节点" class="headerlink" title="初始化第一个节点"></a>初始化第一个节点</h3><pre><code>kubeadm init --config=kubeadm-config.yaml
+......
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes master has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run &quot;kubectl apply -f [podnetwork].yaml&quot; with one of the options listed at:
+https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of machines by running the following on each node
+as root:
+
+kubeadm join apiserver.hipstershop.com:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22</code></pre><blockquote>
+<p>注意：以上(kubeadm join)输出在其他节点加入时会使用，需要妥善保管</p>
+</blockquote>
+<h3 id="配置网络节点"><a href="#配置网络节点" class="headerlink" title="配置网络节点"></a>配置网络节点</h3><p>在此选择Canal网络组件，其他网络组建见：<a href="https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/" target="_blank" rel="noopener">https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/</a></p>
+<pre><code>$ mkdir -p $HOME/.kube
+$ cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+$ chown $(id -u):$(id -g) $HOME/.kube/config
+
+$ kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/canal/rbac.yaml
+$ kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/canal/canal.yaml</code></pre><p>等待第一个节点 pod 都变为运行状态</p>
+<pre><code>kubectl get pod -n kube-system
+NAME                                       READY   STATUS    RESTARTS   AGE
+canal-xp9tm                                3/3     Running   0          79s
+coredns-86c58d9df4-d62mw                   1/1     Running   0          2m37s
+coredns-86c58d9df4-wq26g                   1/1     Running   0          2m37s
+etcd-k8s-m1.novalocal                      1/1     Running   0          2m3s
+kube-apiserver-k8s-m1.novalocal            1/1     Running   0          115s
+kube-controller-manager-k8s-m1.novalocal   1/1     Running   0          2m21s
+kube-proxy-t8x22                           1/1     Running   0          2m37s
+kube-scheduler-k8s-m1.novalocal            1/1     Running   0          2m12s</code></pre><h3 id="复制证书到其他控制节点"><a href="#复制证书到其他控制节点" class="headerlink" title="复制证书到其他控制节点"></a>复制证书到其他控制节点</h3><pre><code>USER=centos
+CONTROL_PLANE_IPS=&quot;172.16.10.49 172.16.10.50&quot;
+for host in ${CONTROL_PLANE_IPS}; do
+    scp /etc/kubernetes/pki/ca.crt &quot;${USER}&quot;@$host:
+    scp /etc/kubernetes/pki/ca.key &quot;${USER}&quot;@$host:
+    scp /etc/kubernetes/pki/sa.key &quot;${USER}&quot;@$host:
+    scp /etc/kubernetes/pki/sa.pub &quot;${USER}&quot;@$host:
+    scp /etc/kubernetes/pki/front-proxy-ca.crt &quot;${USER}&quot;@$host:
+    scp /etc/kubernetes/pki/front-proxy-ca.key &quot;${USER}&quot;@$host:
+    scp /etc/kubernetes/pki/etcd/ca.crt &quot;${USER}&quot;@$host:etcd-ca.crt
+    scp /etc/kubernetes/pki/etcd/ca.key &quot;${USER}&quot;@$host:etcd-ca.key
+    scp /etc/kubernetes/admin.conf &quot;${USER}&quot;@$host:
+done</code></pre><h3 id="登录第二、三个控制节点移动证书到正确位置"><a href="#登录第二、三个控制节点移动证书到正确位置" class="headerlink" title="登录第二、三个控制节点移动证书到正确位置"></a>登录第二、三个控制节点移动证书到正确位置</h3><pre><code>USER=centos
+mkdir -p /etc/kubernetes/pki/etcd
+mv /home/${USER}/ca.crt /etc/kubernetes/pki/
+mv /home/${USER}/ca.key /etc/kubernetes/pki/
+mv /home/${USER}/sa.pub /etc/kubernetes/pki/
+mv /home/${USER}/sa.key /etc/kubernetes/pki/
+mv /home/${USER}/front-proxy-ca.crt /etc/kubernetes/pki/
+mv /home/${USER}/front-proxy-ca.key /etc/kubernetes/pki/
+mv /home/${USER}/etcd-ca.crt /etc/kubernetes/pki/etcd/ca.crt
+mv /home/${USER}/etcd-ca.key /etc/kubernetes/pki/etcd/ca.key
+mv /home/${USER}/admin.conf /etc/kubernetes/admin.conf</code></pre><h3 id="将第二、三个控制节点加入集群"><a href="#将第二、三个控制节点加入集群" class="headerlink" title="将第二、三个控制节点加入集群"></a>将第二、三个控制节点加入集群</h3><blockquote>
+<p>注意：加入集群的命令请使用第一个节点安装完成后生生成的命令。</p>
+</blockquote>
+<pre><code># 在第二个控制节点执行
+$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22 --experimental-control-plane
+# 在第三个控制节点执行
+$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22 --experimental-control-plane</code></pre><h3 id="将从节点加入集群"><a href="#将从节点加入集群" class="headerlink" title="将从节点加入集群"></a>将从节点加入集群</h3><blockquote>
+<p>注意：加入集群的命令请使用第一个节点安装完成后生生成的命令。</p>
+</blockquote>
+<pre><code># 在s1,s2,s3节点执行
+$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22</code></pre>
       
     </div>
 
@@ -178,7 +431,7 @@
       <span>
         <i class="icon-comments"></i>
         <span>
-          <a href="/2018/09/13/Kubernetes-Install/#comment">评论</a>
+          <a href="/2019/06/30/Kubernetes-Install/#comment">评论</a>
         </span>
       </span>
     </div>
