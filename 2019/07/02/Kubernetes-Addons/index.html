@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Kubernetes 常用组件安装 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="Docker、Kubernetes、Ceph、Saltstack、OpenStack 等技术分享">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="Kubernetes 常用组件安装">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>Kubernetes 常用组件安装</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/07/02/Kubernetes-Addons/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-07-02T02:08:31.000Z">
+          2019-07-02
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <blockquote>
+<p><strong>视频课程地址：</strong><a href="https://www.bilibili.com/video/av49387629?from=search&seid=4418298671230182069" target="_blank" rel="noopener">戳我开始学习</a></p>
+</blockquote>
+<h2 id="创建集群管理员账户（Cluster-Admin）"><a href="#创建集群管理员账户（Cluster-Admin）" class="headerlink" title="创建集群管理员账户（Cluster Admin）"></a>创建集群管理员账户（Cluster Admin）</h2><p>编写配置文件 admin-role.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1beta1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">  annotations:</span></span><br><span class="line">    <span class="string">rbac.authorization.kubernetes.io/autoupdate:</span> <span class="string">"true"</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line"><span class="attr">  kind:</span> <span class="string">ClusterRole</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">cluster-admin</span></span><br><span class="line"><span class="attr">  apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line"><span class="attr">- kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">admin</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line">    <span class="string">kubernetes.io/cluster-service:</span> <span class="string">"true"</span></span><br><span class="line">    <span class="string">addonmanager.kubernetes.io/mode:</span> <span class="string">Reconcile</span></span><br></pre></td></tr></table></figure>
+
+<p>执行命令创建账户</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create -f admin-role.yaml</span><br><span class="line">clusterrolebinding.rbac.authorization.k8s.io/admin created</span><br><span class="line">serviceaccount/admin created</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<p>获取新建账户的token</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl -n kube-system get secret|grep admin-token</span><br><span class="line">admin-token-dvhv7                                kubernetes.io/service-account-token   3      15s</span><br><span class="line"></span><br><span class="line">$ kubectl -n kube-system describe secret admin-token-dvhv7</span><br><span class="line">Name:         admin-token-dvhv7</span><br><span class="line">Namespace:    kube-system</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  kubernetes.io/service-account.name: admin</span><br><span class="line">            kubernetes.io/service-account.uid: cd1d963a-3b34-11e9-8ce7-fa163ec5bf9e</span><br><span class="line"></span><br><span class="line">Type:  kubernetes.io/service-account-token</span><br><span class="line"></span><br><span class="line">Data</span><br><span class="line">====</span><br><span class="line">ca.crt:     1025 bytes</span><br><span class="line">namespace:  11 bytes</span><br><span class="line">token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi10b2tlbi1kdmh2NyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJhZG1pbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImNkMWQ5NjNhLTNiMzQtMTFlOS04Y2U3LWZhMTYzZWM1YmY5ZSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTphZG1pbiJ9.TyVprdo9ag_tZPsfUSP-QXQ_jpkG3t7_u0sATsNvS2ZCd9aCs4Ci5IatJf_zKu4qHHDRAckL-aaNt0oK4rZ-jVoU_EUTK2hVcxBQaOtidP5lfMTIxcjjAjXuhnwyNHS9XuEFI4pJwO-4_l6q7lM-i1mhu0g5NIHMaGt22-GvEkWnvhon4LQOFCd2Mafdj_po2GrYByr34Xw92H-uVnzd2irP0lLThE9J1Xg2NvRqdfTZDeW8IG1bx6PDGz-lXnmF2b7S6daoNG6x5UBSysANLNpl-0pUFnx5Ux249-8zi2RyLdedyWj9zXiUp7BvAtfeiqwgT89M95WDHMrjcl4siw</span><br></pre></td></tr></table></figure>
+
+<p>在需要连接集群的机器上配置管理员token，在用户home目录下创建.kube目录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir .kube</span><br></pre></td></tr></table></figure>
+
+<p>编辑.kube/config配置文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">clusters:</span><br><span class="line">- cluster:</span><br><span class="line">    insecure-skip-tls-verify: true</span><br><span class="line">    server: https://apiserver.hipstershop.cn:6443</span><br><span class="line">  name: k8s-prod</span><br><span class="line">contexts:</span><br><span class="line">- context:</span><br><span class="line">    cluster: k8s-prod</span><br><span class="line">    user: k8s-prod</span><br><span class="line">  name: k8s-prod</span><br><span class="line">current-context: k8s-prod</span><br><span class="line">kind: Config</span><br><span class="line">preferences: &#123;&#125;</span><br><span class="line">users:</span><br><span class="line">- name: k8s-prod</span><br><span class="line">  user:</span><br><span class="line">    token: eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJhZG1pbi10b2tlbi1kdmh2NyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJhZG1pbiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImNkMWQ5NjNhLTNiMzQtMTFlOS04Y2U3LWZhMTYzZWM1YmY5ZSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTphZG1pbiJ9.TyVprdo9ag_tZPsfUSP-QXQ_jpkG3t7_u0sATsNvS2ZCd9aCs4Ci5IatJf_zKu4qHHDRAckL-aaNt0oK4rZ-jVoU_EUTK2hVcxBQaOtidP5lfMTIxcjjAjXuhnwyNHS9XuEFI4pJwO-4_l6q7lM-i1mhu0g5NIHMaGt22-GvEkWnvhon4LQOFCd2Mafdj_po2GrYByr34Xw92H-uVnzd2irP0lLThE9J1Xg2NvRqdfTZDeW8IG1bx6PDGz-lXnmF2b7S6daoNG6x5UBSysANLNpl-0pUFnx5Ux249-8zi2RyLdedyWj9zXiUp7BvAtfeiqwgT89M95WDHMrjcl4siw</span><br></pre></td></tr></table></figure>
+
+<h2 id="下载Kubernetes客户端kubectl并安装"><a href="#下载Kubernetes客户端kubectl并安装" class="headerlink" title="下载Kubernetes客户端kubectl并安装"></a>下载Kubernetes客户端kubectl并安装</h2><h3 id="macOS-安装"><a href="#macOS-安装" class="headerlink" title="macOS 安装"></a>macOS 安装</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ brew install kubernetes-cli</span><br></pre></td></tr></table></figure>
+
+<h3 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h3><p>要在Windows上可以通过<a href="https://chocolatey.org/" target="_blank" rel="noopener">Chocolatey</a>软件包管理器安装kubectl</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">choco install kubernetes-cli</span><br><span class="line"><span class="built_in">cd</span> C:\users\yourusername</span><br><span class="line">mkdir .kube</span><br><span class="line"><span class="built_in">cd</span> .kube</span><br><span class="line">New-Item config -<span class="built_in">type</span> file</span><br></pre></td></tr></table></figure>
+
+<h3 id="CentOS"><a href="#CentOS" class="headerlink" title="CentOS"></a>CentOS</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo</span><br><span class="line">[kubernetes]</span><br><span class="line">name=Kubernetes</span><br><span class="line">baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=0</span><br><span class="line">repo_gpgcheck=0</span><br><span class="line">gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg</span><br><span class="line">       http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ yum install -y kubectl</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-Kubernetes-Dashboard"><a href="#安装-Kubernetes-Dashboard" class="headerlink" title="安装 Kubernetes Dashboard"></a>安装 Kubernetes Dashboard</h2><p>首先需要从官网下载部署配置文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ wget https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
+
+<p>然后编辑部署配置文件，将镜像下载仓库提货为gcr.azk8s.cn/google-containers</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sed -i <span class="string">'s#k8s.gcr.io#gcr.azk8s.cn/google-containers#g'</span> kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
+
+<p>通过如下命令部署Dashboard插件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f kubernetes-dashboard.yaml</span><br></pre></td></tr></table></figure>
+
+<p>等待插件部署完成</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl -n kube-system get pods</span><br><span class="line">NAME                                   READY   STATUS    RESTARTS   AGE</span><br><span class="line">kubernetes-dashboard-57df4db6b-n7d7q   1/1     Running   0          45m</span><br></pre></td></tr></table></figure>
+
+<p>为了安全，现在Dashboard只能通过代理进行访问，默认代理会启动在127.0.0.1的8001端口上</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl proxy</span><br></pre></td></tr></table></figure>
+
+<p>访问如下地址</p>
+<p>可以通过上面创建的管理员账号的token进行访问，也可以<a href="https://github.com/kubernetes/dashboard/wiki/Creating-sample-user" target="_blank" rel="noopener">创建普通账户</a>进行访问，在弹出的菜单中选择token(令牌)，然后填入token内容</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装Helm"><a href="#安装Helm" class="headerlink" title="安装Helm"></a>安装Helm</h2><p>Helm是Kubernetes生态系统中的一个软件包管理工具。Helm把Kubernetes资源(比如deployments、services和ingress等) 打包到一个chart中，而chart被保存到chart仓库。通过chart仓库可用来存储和分享chart。Helm使发布可配置，支持发布应用配置的版本管理，简化了Kubernetes部署应用的版本控制、打包、发布、删除、更新等操作。</p>
+<h3 id="安装helm客户端"><a href="#安装helm客户端" class="headerlink" title="安装helm客户端"></a>安装helm客户端</h3><p>根据操作系统到helm官网下载相应的二进制包，下载地址：<a href="https://github.com/helm/helm/releases，以CentOS系统为例：" target="_blank" rel="noopener">https://github.com/helm/helm/releases，以CentOS系统为例：</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ wget https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz</span><br><span class="line">$ tar xzvf helm-v2.13.1-linux-amd64.tar.gz</span><br><span class="line">$ mv linux-amd64/helm /usr/<span class="built_in">local</span>/bin</span><br><span class="line">$ chmod +x /usr/<span class="built_in">local</span>/bin/helm</span><br></pre></td></tr></table></figure>
+
+<p>创建helm服务器端tiller使用的账号，编辑配置文件helm-service-account.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Create a service account for Helm and grant the cluster admin role.</span></span><br><span class="line"><span class="comment"># It is assumed that helm should be installed with this service account</span></span><br><span class="line"><span class="comment"># (tiller).</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">tiller</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">tiller</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line"><span class="attr">  apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="attr">  kind:</span> <span class="string">ClusterRole</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">cluster-admin</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line"><span class="attr">- kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">tiller</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">kube-system</span></span><br></pre></td></tr></table></figure>
+
+<p>应用配置文件helm-service-account.yaml</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f helm-service-account.yaml</span><br></pre></td></tr></table></figure>
+
+<p>初始化安装tiller</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ helm init --tiller-image gcr.azk8s.cn/kubernetes-helm/tiller:v2.13.1 --skip-refresh --service-account tiller</span><br></pre></td></tr></table></figure>
+
+<h2 id="部署Traefik-Ingress控制器"><a href="#部署Traefik-Ingress控制器" class="headerlink" title="部署Traefik Ingress控制器"></a>部署Traefik Ingress控制器</h2><p>为了便于将集群中的服务暴露到集群外部，从集群外部访问，使用Helm将Traefik Ingress部署到Kubernetes上</p>
+<p>从官方网站下载Charts</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/helm/charts.git</span><br></pre></td></tr></table></figure>
+
+<p>编写配置文件traefik.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">serviceType:</span> <span class="string">NodePort</span></span><br><span class="line"><span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">resources:</span></span><br><span class="line"><span class="attr">  limits:</span></span><br><span class="line"><span class="attr">    cpu:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">    memory:</span> <span class="number">1</span><span class="string">Gi</span></span><br><span class="line"><span class="attr">  requests:</span></span><br><span class="line"><span class="attr">    cpu:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">    memory:</span> <span class="number">1</span><span class="string">Gi</span></span><br><span class="line"><span class="attr">dashboard:</span></span><br><span class="line"><span class="attr">  enabled:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  domain:</span> <span class="string">traefik.hipstershop.cn</span></span><br><span class="line"><span class="attr">service:</span></span><br><span class="line"><span class="attr">  nodePorts:</span></span><br><span class="line"><span class="attr">    http:</span> <span class="number">30080</span></span><br><span class="line"><span class="attr">    https:</span> <span class="number">30443</span></span><br><span class="line"><span class="attr">rbac:</span></span><br><span class="line"><span class="attr">  enabled:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">metrics:</span></span><br><span class="line"><span class="attr">  prometheus:</span></span><br><span class="line"><span class="attr">    enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>执行系列命令部署</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ helm install traefik --name traefik --namespace kube-system -f traefik/traefik.yaml</span><br></pre></td></tr></table></figure>
+
+<p>配置负载均衡</p>
+<p>将节点的30080加到负载均衡（如 阿里云的ELB、Haproxy、F5等）后面，负载均衡对外提供80、443端口的访问。通过将traefik.hipstershop.cn解析到负载均衡的VIP上就能够访问Traefik的dashboard了。</p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/helm/">helm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/dashboard/">dashboard</a><a href="/tags/traefik/">traefik</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+  
+
+	<section id="comment" class="comment">
+		<div id="gitment"></div>
+	</section>
+	<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+	<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+	<script>
+		var gitment = new Gitment({
+			owner: 'ist0ne',
+			repo: 'gitment',
+			oauth: {
+				client_id: 'a3a5af94aef00fdf0c24',
+				client_secret: '3d47316b6b7d0b98ba405da19a65457357256f2d',
+			},
+		})
+		gitment.render('gitment')
+	</script>
+
+
+
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

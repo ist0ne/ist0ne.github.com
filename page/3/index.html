@@ -65,15 +65,15 @@
 
   
     
-    <h3 class="article-title"><a href="/2014/05/14/puppet-route-module/"><span>Puppet: route模块</span></a></h3>
+    <h3 class="article-title"><a href="/2014/05/19/puppet-install/"><span>CentOS 6.4 Puppet 3.2.4安装</span></a></h3>
     
   
 
   <div class="article-top-meta">
     <span class="posted-on">
-      <a href="/2014/05/14/puppet-route-module/" rel="bookmark">
-        <time class="entry-date published" datetime="2014-05-14T02:00:00.000Z">
-          2014-05-14
+      <a href="/2014/05/19/puppet-install/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-19T02:00:00.000Z">
+          2014-05-19
         </time>
       </a>
     </span>
@@ -85,10 +85,17 @@
   <div class="article-content">
     <div class="entry">
       
-        <p>本文介绍一个简单地route puppet模块，用来控制系统的路由信息，当你的网络很大时，有可能需要添加很多路由来与其他网段通信，此模块实现系统启动时自动添加路由功能。<br>github地址：<a href="https://github.com/ist0ne/puppet-route" target="_blank" rel="noopener">https://github.com/ist0ne/puppet-route</a></p>
-<h2 id="1、描述"><a href="#1、描述" class="headerlink" title="1、描述"></a>1、描述</h2><p>本模块依赖<a href="https://github.com/puppetlabs/puppetlabs-stdlib" target="_blank" rel="noopener">puppetlabs-stdlib</a>，实现系统路由管理。</p>
-<h2 id="2、用法"><a href="#2、用法" class="headerlink" title="2、用法"></a>2、用法</h2><p>为主机或网段添加路由：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$target_net = [<span class="string">'20.20.20.0/24'</span>, <span class="string">'10.20.0.0/16'</span>, <span class="string">'10.10.20.21'</span>]</span><br><span class="line">route &#123; $target_net: </span><br><span class="line">    gateway     =&gt; <span class="string">'10.10.10.1'</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        <p>本文主要描述puppet的安装、加固、Puppet-dashboard安装、Puppet模块、hiera使用以及自定义facts。</p>
+<h2 id="1、在Puppet-Server和Puppet-Client上关闭防火墙和selinux"><a href="#1、在Puppet-Server和Puppet-Client上关闭防火墙和selinux" class="headerlink" title="1、在Puppet Server和Puppet Client上关闭防火墙和selinux"></a>1、在Puppet Server和Puppet Client上关闭防火墙和selinux</h2><p>清除防火墙设置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure>
+
+<p>保存设置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/iptables save</span><br></pre></td></tr></table></figure>
+
+<p>设置selinux为disable</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/sysconfig/selinux</span><br><span class="line">SELINUX=disabled</span><br></pre></td></tr></table></figure>
+
+<h2 id="2、在Puppet-Server和Puppet-Client上设置hosts，puppet通过主机名区分各节点"><a href="#2、在Puppet-Server和Puppet-Client上设置hosts，puppet通过主机名区分各节点" class="headerlink" title="2、在Puppet Server和Puppet Client上设置hosts，puppet通过主机名区分各节点"></a>2、在Puppet Server和Puppet Client上设置hosts，puppet通过主机名区分各节点</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10.10.10.10     puppet.example.com</span><br><span class="line">10.10.10.11     zabbix.example.com</span><br></pre></td></tr></table></figure>
       
     </div>
 
@@ -111,7 +118,7 @@
 
     <span class="post-tags">
       <i class="icon-tags"></i>
-        <a href="/tags/puppet/">puppet</a><a href="/tags/devops/">devops</a><a href="/tags/route/">route</a>
+        <a href="/tags/puppet/">puppet</a><a href="/tags/devops/">devops</a>
     </span>
     
 
@@ -122,7 +129,7 @@
       <span>
         <i class="icon-comments"></i>
         <span>
-          <a href="/2014/05/14/puppet-route-module/#comment">评论</a>
+          <a href="/2014/05/19/puppet-install/#comment">评论</a>
         </span>
       </span>
     </div>
@@ -201,6 +208,77 @@
         <i class="icon-comments"></i>
         <span>
           <a href="/2014/05/14/puppet-sudo-module/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
+    <h3 class="article-title"><a href="/2014/05/14/puppet-route-module/"><span>Puppet: route模块</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/05/14/puppet-route-module/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-14T02:00:00.000Z">
+          2014-05-14
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>本文介绍一个简单地route puppet模块，用来控制系统的路由信息，当你的网络很大时，有可能需要添加很多路由来与其他网段通信，此模块实现系统启动时自动添加路由功能。<br>github地址：<a href="https://github.com/ist0ne/puppet-route" target="_blank" rel="noopener">https://github.com/ist0ne/puppet-route</a></p>
+<h2 id="1、描述"><a href="#1、描述" class="headerlink" title="1、描述"></a>1、描述</h2><p>本模块依赖<a href="https://github.com/puppetlabs/puppetlabs-stdlib" target="_blank" rel="noopener">puppetlabs-stdlib</a>，实现系统路由管理。</p>
+<h2 id="2、用法"><a href="#2、用法" class="headerlink" title="2、用法"></a>2、用法</h2><p>为主机或网段添加路由：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$target_net = [<span class="string">'20.20.20.0/24'</span>, <span class="string">'10.20.0.0/16'</span>, <span class="string">'10.10.20.21'</span>]</span><br><span class="line">route &#123; $target_net: </span><br><span class="line">    gateway     =&gt; <span class="string">'10.10.10.1'</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/Puppet/">Puppet</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/puppet/">puppet</a><a href="/tags/devops/">devops</a><a href="/tags/route/">route</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2014/05/14/puppet-route-module/#comment">评论</a>
         </span>
       </span>
     </div>

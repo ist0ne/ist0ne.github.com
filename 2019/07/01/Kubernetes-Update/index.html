@@ -89,27 +89,63 @@
 </blockquote>
 <h2 id="控制平面升级"><a href="#控制平面升级" class="headerlink" title="控制平面升级"></a>控制平面升级</h2><p>只有master节点需要执行如下操作，需要逐节点操作。将集群从当前的v1.14.3升级到v1.15.0。</p>
 <p>列出可用的kubeadm软件包</p>
-<pre><code>yum list --showduplicates kubeadm --disableexcludes=kubernetes</code></pre><p>安装kubeadm新版本软件包</p>
-<pre><code>yum install -y kubeadm-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>确认kubeadm为正确的版本</p>
-<pre><code>kubeadm version</code></pre><p>查看升级计划</p>
-<pre><code>kubeadm upgrade plan</code></pre><p>升级第一个控制节点</p>
-<pre><code>kubeadm upgrade apply v1.15.0</code></pre><p>升级kubelet软件包</p>
-<pre><code>yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>重启kubelet服务</p>
-<pre><code>systemctl restart kubelet</code></pre><h2 id="升级第二、三个控制节点"><a href="#升级第二、三个控制节点" class="headerlink" title="升级第二、三个控制节点"></a>升级第二、三个控制节点</h2><p>升级控制节点</p>
-<pre><code>kubeadm upgrade node</code></pre><p>升级kubelet、kubectl软件包</p>
-<pre><code>yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>重启kubelet服务</p>
-<pre><code>systemctl daemon-reload
-systemctl restart kubelet</code></pre><h2 id="升级工作节点"><a href="#升级工作节点" class="headerlink" title="升级工作节点"></a>升级工作节点</h2><p>逐节点升级工作节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum list --showduplicates kubeadm --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>安装kubeadm新版本软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y kubeadm-1.15.0-0 --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>确认kubeadm为正确的版本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm version</span><br></pre></td></tr></table></figure>
+
+<p>查看升级计划</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm upgrade plan</span><br></pre></td></tr></table></figure>
+
+<p>升级第一个控制节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm upgrade apply v1.15.0</span><br></pre></td></tr></table></figure>
+
+<p>升级kubelet软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>重启kubelet服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ systemctl restart kubelet</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<h2 id="升级第二、三个控制节点"><a href="#升级第二、三个控制节点" class="headerlink" title="升级第二、三个控制节点"></a>升级第二、三个控制节点</h2><p>升级控制节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm upgrade node</span><br></pre></td></tr></table></figure>
+
+<p>升级kubelet、kubectl软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>重启kubelet服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ systemctl daemon-reload</span><br><span class="line">$ systemctl restart kubelet</span><br></pre></td></tr></table></figure>
+
+<h2 id="升级工作节点"><a href="#升级工作节点" class="headerlink" title="升级工作节点"></a>升级工作节点</h2><p>逐节点升级工作节点</p>
 <p>升级kubeadm软件包</p>
-<pre><code>yum install -y kubeadm-1.15.x-0 --disableexcludes=kubernetes</code></pre><p>驱逐节点上的pod并标记为不可调度</p>
-<pre><code>kubectl drain k8s-s1 --ignore-daemonsets</code></pre><p>升级kubelet、kubectl软件包</p>
-<pre><code>yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</code></pre><p>更新kubelet配置文件</p>
-<pre><code>kubeadm upgrade node</code></pre><p>重启kubelet服务</p>
-<pre><code>systemctl daemon-reload
-systemctl restart kubelet</code></pre><p>查看kubelet状态</p>
-<pre><code>systemctl status kubelet</code></pre><p>标注节点为可调度</p>
-<pre><code>kubectl uncordon k8s-s1</code></pre><p>确定各节点状态为Ready</p>
-<pre><code>kubectl get nodes</code></pre><h2 id="从失败状态恢复"><a href="#从失败状态恢复" class="headerlink" title="从失败状态恢复"></a>从失败状态恢复</h2><p>如果 kubeadm upgrade 执行失败，它将尝试执行回滚。因此，如果这种情况发生在第一个 master 身上，那么集群仍然完好无损的可能性很大。你可以再次运行 kubeadm upgrade apply，因为它是幂等的，最终应确保实际状态是你声明的所需状态。你可以使用参数 –force 运行 kubeadm upgrade apply 命令更改运行的集群为 y.y.y –&gt; x.x.x，它可用于从糟糕的状态中恢复过来。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y kubeadm-1.15.x-0 --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>驱逐节点上的pod并标记为不可调度</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl drain k8s-s1 --ignore-daemonsets</span><br></pre></td></tr></table></figure>
+
+<p>升级kubelet、kubectl软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y kubelet-1.15.0-0 kubectl-1.15.0-0 --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>更新kubelet配置文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm upgrade node</span><br></pre></td></tr></table></figure>
+
+<p>重启kubelet服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ systemctl daemon-reload</span><br><span class="line">$ systemctl restart kubelet</span><br></pre></td></tr></table></figure>
+
+<p>查看kubelet状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ systemctl status kubelet</span><br></pre></td></tr></table></figure>
+
+<p>标注节点为可调度</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl uncordon k8s-s1</span><br></pre></td></tr></table></figure>
+
+<p>确定各节点状态为Ready</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get nodes</span><br></pre></td></tr></table></figure>
+
+<h2 id="从失败状态恢复"><a href="#从失败状态恢复" class="headerlink" title="从失败状态恢复"></a>从失败状态恢复</h2><p>如果 kubeadm upgrade 执行失败，它将尝试执行回滚。因此，如果这种情况发生在第一个 master 身上，那么集群仍然完好无损的可能性很大。你可以再次运行 kubeadm upgrade apply，因为它是幂等的，最终应确保实际状态是你声明的所需状态。你可以使用参数 –force 运行 kubeadm upgrade apply 命令更改运行的集群为 y.y.y –&gt; x.x.x，它可用于从糟糕的状态中恢复过来。</p>
 <p>如果 kubeadm upgrade apply 是在其中一个辅助 master 上失败，则仍然有一个正在工作的已经升级的集群，但辅助 master 的状态有些不确定。你将不得不找出哪里出了问题，并手动加入辅助 master。如上所述，有时升级其中一个辅助 master 时，首先等待重新启动的静态 pod 失败，但在一两分钟的暂停后简单地重复该操作时会成功。</p>
 
       
@@ -127,7 +163,7 @@ systemctl restart kubelet</code></pre><p>查看kubelet状态</p>
 
     <span class="post-tags">
       <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubeadm/">kubeadm</a><a href="/tags/kubectl/">kubectl</a>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/kubeadm/">kubeadm</a>
     </span>
     
 

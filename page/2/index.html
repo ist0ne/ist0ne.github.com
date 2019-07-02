@@ -65,6 +65,82 @@
 
   
     
+    <h3 class="article-title"><a href="/2014/09/10/openstack-use/"><span>Openstack 使用</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/09/10/openstack-use/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-09-10T03:00:00.000Z">
+          2014-09-10
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>OpenStack作为基础设施即服务（简称IaaS）资源的通用前端。首要任务是简化云的部署过程并为其带来良好的可扩展性。本文希望通过提供必要的指导信息，帮助大家利用OpenStack前端来设置及管理自己的私有云。</p>
+<h2 id="导入虚拟机镜像"><a href="#导入虚拟机镜像" class="headerlink" title="导入虚拟机镜像"></a>导入虚拟机镜像</h2><p>如下列出了一下虚拟机镜像，可以在本地下载后通过Openstack界面导入。</p>
+<p><a href="https://openstack.redhat.com/Image_resources" target="_blank" rel="noopener">https://openstack.redhat.com/Image_resources</a></p>
+<p>也可以参考如下文档自己制作镜像：</p>
+<p><a href="https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/OpenStack/page/Creating%20qcow2%20CentOS%20Image%20for%20OpenStack" target="_blank" rel="noopener">https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/OpenStack/page/Creating%20qcow2%20CentOS%20Image%20for%20OpenStack</a></p>
+<p>导入镜像：</p>
+<p>点击左侧的镜像 选项卡，可以看到已经导入的镜像，点击创建镜像 按钮创建镜像。</p>
+<p><img src="/images/14-09-10/openstack_images.png" alt="Openstack镜像"></p>
+<p>填写 镜像名称，镜像源选择—镜像文件，格式选择 QCOW2，勾选 公有 框（这样你上传得镜像其他人也能使用），然后点击创建镜像。</p>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/虚拟化/">虚拟化</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/Openstack/">Openstack</a><a href="/tags/KVM/">KVM</a><a href="/tags/Ceph/">Ceph</a><a href="/tags/CoreOS/">CoreOS</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2014/09/10/openstack-use/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2014/09/10/openstack-install/"><span>Openstack 安装</span></a></h3>
     
   
@@ -739,84 +815,6 @@
         <i class="icon-comments"></i>
         <span>
           <a href="/2014/05/22/rpm-pkg/#comment">评论</a>
-        </span>
-      </span>
-    </div>
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2014/05/19/puppet-install/"><span>CentOS 6.4 Puppet 3.2.4安装</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2014/05/19/puppet-install/" rel="bookmark">
-        <time class="entry-date published" datetime="2014-05-19T02:00:00.000Z">
-          2014-05-19
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>本文主要描述puppet的安装、加固、Puppet-dashboard安装、Puppet模块、hiera使用以及自定义facts。</p>
-<h2 id="1、在Puppet-Server和Puppet-Client上关闭防火墙和selinux"><a href="#1、在Puppet-Server和Puppet-Client上关闭防火墙和selinux" class="headerlink" title="1、在Puppet Server和Puppet Client上关闭防火墙和selinux"></a>1、在Puppet Server和Puppet Client上关闭防火墙和selinux</h2><p>清除防火墙设置</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure>
-
-<p>保存设置</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/iptables save</span><br></pre></td></tr></table></figure>
-
-<p>设置selinux为disable</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/sysconfig/selinux</span><br><span class="line">SELINUX=disabled</span><br></pre></td></tr></table></figure>
-
-<h2 id="2、在Puppet-Server和Puppet-Client上设置hosts，puppet通过主机名区分各节点"><a href="#2、在Puppet-Server和Puppet-Client上设置hosts，puppet通过主机名区分各节点" class="headerlink" title="2、在Puppet Server和Puppet Client上设置hosts，puppet通过主机名区分各节点"></a>2、在Puppet Server和Puppet Client上设置hosts，puppet通过主机名区分各节点</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10.10.10.10     puppet.example.com</span><br><span class="line">10.10.10.11     zabbix.example.com</span><br></pre></td></tr></table></figure>
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-      
-
-    <span class="post-categories">
-      <i class="icon-categories"></i>
-        <a href="/categories/Puppet/">Puppet</a>
-    </span>
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/puppet/">puppet</a><a href="/tags/devops/">devops</a>
-    </span>
-    
-
-    </div>
-
-    
-    <div class="article-meta pull-right">
-      <span>
-        <i class="icon-comments"></i>
-        <span>
-          <a href="/2014/05/19/puppet-install/#comment">评论</a>
         </span>
       </span>
     </div>

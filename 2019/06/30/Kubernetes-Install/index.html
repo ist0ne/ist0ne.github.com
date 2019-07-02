@@ -91,237 +91,108 @@
 <ul>
 <li><strong>生产级别的Windwos节点支持</strong> Kubernetes1.14版本正式支持将Windows节点添加为工作节点，这意味着可以在生产环境使用Windows容器了，使庞大的Windows应用生态系统能够利用Kubernetes平台的强大功能了。</li>
 <li><strong>Kubectl的更新</strong> 新版本Kubectl可以使用声明性Resource Config来管理资源。kubectl的文档也从头进行编写，可参考<a href="https://kubectl.docs.kubernetes.io" target="_blank" rel="noopener">文档</a>。</li>
-<li><strong>持久化本地Volumes</strong> 本地SSD比远程磁盘能提供更好的性能。对性能要求比较高的数据库和分布式文件系统可以使用久化本地存储。</li>
+<li><strong>持久化本地Volumes</strong> 本地SSD比远程磁盘能提供更好的性能。对性能要求比较高的数据库和分布式文件系统可以使用久化本地存储。<a id="more"></a>
+
+</li>
 </ul>
 <h2 id="准备节点"><a href="#准备节点" class="headerlink" title="准备节点"></a>准备节点</h2><p>通过kubeadm部署高可用Kubernetes集群有两种架构，一种是将数据平面（etcd集群）和控制平面（Kubernetes控制节点）部署在一起，另一种是分开部署，其中部署在一起可以节省服务器，但是数据平面和控制平面耦合在一起，当一台机器故障时，数据平面和控制平面将同时出现问题。</p>
 <p>数据平面和控制平面共用节点：</p>
-<p><img src="imgs/201907/kubeadm-ha-topology-stacked-etcd.png" alt="数据平面和控制平面共用节点"></p>
+<p><img src="/imgs/201907/kubeadm-ha-topology-stacked-etcd.png" alt="数据平面和控制平面共用节点"></p>
 <p>数据平面和控制平面不共用节点：</p>
-<p><img src="imgs/201907/kubeadm-ha-topology-external-etcd.png" alt="数据平面和控制平面不共用节点"></p>
+<p><img src="/imgs/201907/kubeadm-ha-topology-external-etcd.png" alt="数据平面和控制平面不共用节点"></p>
 <p>我们按照数据平面和控制平面共用节点进行高可用集群的部署。</p>
 <h2 id="升级各节点系统"><a href="#升级各节点系统" class="headerlink" title="升级各节点系统"></a>升级各节点系统</h2><p>操作系统我们选择 CentOS 7 最新版（7.6.1810），如果不是最新版，可参考如下升级到最新版。</p>
 <p>按如下内容，编辑 /etc/yum.repos.d/CentOS-Base.repo</p>
-<pre><code># CentOS-Base.repo
-#
-# The mirror system uses the connecting IP address of the client and the
-# update status of each mirror to pick mirrors that are updated to and
-# geographically close to the client.  You should use this for CentOS updates
-# unless you are manually picking other mirrors.
-#
-# If the mirrorlist= does not work for you, as a fall back you can try the
-# remarked out baseurl= line instead.
-#
-#
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"># CentOS-Base.repo</span><br><span class="line">#</span><br><span class="line"># The mirror system uses the connecting IP address of the client and the</span><br><span class="line"># update status of each mirror to pick mirrors that are updated to and</span><br><span class="line"># geographically close to the client.  You should use this for CentOS updates</span><br><span class="line"># unless you are manually picking other mirrors.</span><br><span class="line">#</span><br><span class="line"># If the mirrorlist= does not work for you, as a fall back you can try the</span><br><span class="line"># remarked out baseurl= line instead.</span><br><span class="line">#</span><br><span class="line">#</span><br><span class="line">[base]</span><br><span class="line">name=CentOS-$releasever - Base</span><br><span class="line">#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=os&amp;infra=$infra</span><br><span class="line">baseurl=http://mirrors.163.com/centos/7.6.1810/os/$basearch/</span><br><span class="line">#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/</span><br><span class="line">gpgcheck=1</span><br><span class="line">gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</span><br><span class="line">#released updates</span><br><span class="line">[updates]</span><br><span class="line">name=CentOS-$releasever - Updates</span><br><span class="line">#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=updates&amp;infra=$infra</span><br><span class="line">baseurl=http://mirrors.163.com/centos/7.6.1810/updates/$basearch/</span><br><span class="line">#baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/</span><br><span class="line">gpgcheck=1</span><br><span class="line">gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</span><br><span class="line"></span><br><span class="line">#additional packages that may be useful</span><br><span class="line">[extras]</span><br><span class="line">name=CentOS-$releasever - Extras</span><br><span class="line">#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=extras&amp;infra=$infra</span><br><span class="line">baseurl=http://mirrors.163.com/centos/7.6.1810/extras/$basearch/</span><br><span class="line">#baseurl=http://mirror.centos.org/centos/$releasever/extras/$basearch/</span><br><span class="line">gpgcheck=1</span><br><span class="line">gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</span><br><span class="line"></span><br><span class="line">#additional packages that extend functionality of existing packages</span><br><span class="line">[centosplus]</span><br><span class="line">name=CentOS-$releasever - Plus</span><br><span class="line">#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=centosplus&amp;infra=$infra</span><br><span class="line">baseurl=http://mirrors.163.com/centos/7.6.1810/centosplus/$basearch/</span><br><span class="line">#baseurl=http://mirror.centos.org/centos/$releasever/centosplus/$basearch/</span><br><span class="line">gpgcheck=1</span><br><span class="line">enabled=0</span><br><span class="line">gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</span><br></pre></td></tr></table></figure>
 
-[base]
-name=CentOS-$releasever - Base
-#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=os&amp;infra=$infra
-baseurl=http://mirrors.163.com/centos/7.6.1810/os/$basearch/
-#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+<p>升级系统并重启</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ yum update -y</span><br><span class="line">$ reboot</span><br></pre></td></tr></table></figure>
 
-#released updates
-[updates]
-name=CentOS-$releasever - Updates
-#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=updates&amp;infra=$infra
-baseurl=http://mirrors.163.com/centos/7.6.1810/updates/$basearch/
-#baseurl=http://mirror.centos.org/centos/$releasever/updates/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+<p>关闭SELinux，编辑 /etc/sysconfig/selinux，设置SELINUX=disabled</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ setenforce 0</span><br></pre></td></tr></table></figure>
 
-#additional packages that may be useful
-[extras]
-name=CentOS-$releasever - Extras
-#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=extras&amp;infra=$infra
-baseurl=http://mirrors.163.com/centos/7.6.1810/extras/$basearch/
-#baseurl=http://mirror.centos.org/centos/$releasever/extras/$basearch/
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+<p>配置内核参数</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ cat &lt;&lt;EOF &gt;  /etc/sysctl.d/k8s.conf</span><br><span class="line">net.bridge.bridge-nf-call-ip6tables = 1</span><br><span class="line">net.bridge.bridge-nf-call-iptables = 1</span><br><span class="line">net.ipv4.ip_forward = 1</span><br><span class="line">vm.swappiness = 0</span><br><span class="line">EOF</span><br><span class="line">$ sysctl --system</span><br></pre></td></tr></table></figure>
 
-#additional packages that extend functionality of existing packages
-[centosplus]
-name=CentOS-$releasever - Plus
-#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=centosplus&amp;infra=$infra
-baseurl=http://mirrors.163.com/centos/7.6.1810/centosplus/$basearch/
-#baseurl=http://mirror.centos.org/centos/$releasever/centosplus/$basearch/
-gpgcheck=1
-enabled=0
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</code></pre><p>升级系统并重启</p>
-<pre><code>$ yum update -y
-$ reboot</code></pre><p>关闭SELinux，编辑 /etc/sysconfig/selinux，设置SELINUX=disabled</p>
-<pre><code>$ setenforce 0</code></pre><p>配置内核参数</p>
-<pre><code>$ cat &lt;&lt;EOF &gt;  /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_forward = 1
-vm.swappiness = 0
-EOF
-$ sysctl --system</code></pre><p>Kubernetes v1.8+ 要求关闭系统 Swap，请在所有节点利用以下指令关闭：</p>
-<pre><code>$ swapoff -a &amp;&amp; sysctl -w vm.swappiness=0
+<p>Kubernetes v1.8+ 要求关闭系统 Swap，请在所有节点利用以下指令关闭：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ swapoff -a &amp;&amp; sysctl -w vm.swappiness=0</span><br><span class="line"></span><br><span class="line">$ vi /etc/fstab</span><br><span class="line">注释swap相关的行</span><br></pre></td></tr></table></figure>
 
-$ vi /etc/fstab
-注释swap相关的行</code></pre><p>设置各节点主机名：</p>
-<pre><code>hostnamectl set-hostname k8s-m1
-hostnamectl set-hostname k8s-m2
-hostnamectl set-hostname k8s-m3
-hostnamectl set-hostname k8s-s1
-hostnamectl set-hostname k8s-s2</code></pre><p>修改hosts，添加如下行：</p>
-<pre><code>172.16.10.48 k8s-m001
-172.16.10.49 k8s-m002
-172.16.10.50 k8s-m003
-172.16.10.51 k8s-s001
-172.16.10.52 k8s-s002
-172.16.10.53 k8s-s002</code></pre><h2 id="配置所有节点加载ipvs相关模块（kube-proxy-使用ipvs模式）"><a href="#配置所有节点加载ipvs相关模块（kube-proxy-使用ipvs模式）" class="headerlink" title="配置所有节点加载ipvs相关模块（kube-proxy 使用ipvs模式）"></a>配置所有节点加载ipvs相关模块（kube-proxy 使用ipvs模式）</h2><p>加载相关内核模块</p>
-<pre><code>$ cat &gt; /etc/sysconfig/modules/ipvs.modules &lt;&lt; EOF
-#!/bin/bash
-modprobe -- ip_vs
-modprobe -- ip_vs_rr
-modprobe -- ip_vs_wrr
-modprobe -- ip_vs_sh
-modprobe -- nf_conntrack_ipv4
-EOF
+<p>设置各节点主机名：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">hostnamectl <span class="built_in">set</span>-hostname k8s-m1</span><br><span class="line">hostnamectl <span class="built_in">set</span>-hostname k8s-m2</span><br><span class="line">hostnamectl <span class="built_in">set</span>-hostname k8s-m3</span><br><span class="line">hostnamectl <span class="built_in">set</span>-hostname k8s-s1</span><br><span class="line">hostnamectl <span class="built_in">set</span>-hostname k8s-s2</span><br></pre></td></tr></table></figure>
 
-$ chmod 755 /etc/sysconfig/modules/ipvs.modules &amp;&amp; bash /etc/sysconfig/modules/ipvs.modules &amp;&amp; lsmod | grep -e ip_vs -e nf_conntrack_ipv4</code></pre><p>安装相关软件包</p>
-<pre><code>$ yum install -y ipset ipvsadm</code></pre><h2 id="配置ssh-key认证"><a href="#配置ssh-key认证" class="headerlink" title="配置ssh key认证"></a>配置ssh key认证</h2><p>在主节点1上执行生成公钥</p>
-<pre><code>$ ssh-keygen</code></pre><p>拷贝 /root/.ssh/id_rsa.pub 内容到主节点2和主节点3上</p>
-<pre><code>$ vi /home/centos/.ssh/authorized_keys</code></pre><h2 id="所有节点安装-Docker"><a href="#所有节点安装-Docker" class="headerlink" title="所有节点安装 Docker"></a>所有节点安装 Docker</h2><p>推荐安装 1.13.1, 17.03, 17.06, 17.09, 18.06, 18.09，但是18.09+是未经测试的，不推荐使用。</p>
+<p>修改hosts，添加如下行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">172.16.10.48 k8s-m001</span><br><span class="line">172.16.10.49 k8s-m002</span><br><span class="line">172.16.10.50 k8s-m003</span><br><span class="line">172.16.10.51 k8s-s001</span><br><span class="line">172.16.10.52 k8s-s002</span><br><span class="line">172.16.10.53 k8s-s002</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置所有节点加载ipvs相关模块（kube-proxy-使用ipvs模式）"><a href="#配置所有节点加载ipvs相关模块（kube-proxy-使用ipvs模式）" class="headerlink" title="配置所有节点加载ipvs相关模块（kube-proxy 使用ipvs模式）"></a>配置所有节点加载ipvs相关模块（kube-proxy 使用ipvs模式）</h2><p>加载相关内核模块</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ cat &gt; /etc/sysconfig/modules/ipvs.modules &lt;&lt; EOF</span><br><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">modprobe -- ip_vs</span><br><span class="line">modprobe -- ip_vs_rr</span><br><span class="line">modprobe -- ip_vs_wrr</span><br><span class="line">modprobe -- ip_vs_sh</span><br><span class="line">modprobe -- nf_conntrack_ipv4</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ chmod 755 /etc/sysconfig/modules/ipvs.modules &amp;&amp; bash /etc/sysconfig/modules/ipvs.modules &amp;&amp; lsmod | grep -e ip_vs -e nf_conntrack_ipv4</span><br></pre></td></tr></table></figure>
+
+<p>安装相关软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y ipset ipvsadm</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置ssh-key认证"><a href="#配置ssh-key认证" class="headerlink" title="配置ssh key认证"></a>配置ssh key认证</h2><p>在主节点1上执行生成公钥</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ssh-keygen</span><br></pre></td></tr></table></figure>
+
+<p>拷贝 /root/.ssh/id_rsa.pub 内容到主节点2和主节点3上</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ vi /home/centos/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+
+<h2 id="所有节点安装-Docker"><a href="#所有节点安装-Docker" class="headerlink" title="所有节点安装 Docker"></a>所有节点安装 Docker</h2><p>推荐安装 1.13.1, 17.03, 17.06, 17.09, 18.06, 18.09，但是18.09+是未经测试的，不推荐使用。</p>
 <p>安装依赖包</p>
-<pre><code>$ yum install -y yum-utils \
-device-mapper-persistent-data \
-lvm2</code></pre><p>添加docker yum仓库</p>
-<pre><code>$  yum-config-manager \
---add-repo \
-https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo</code></pre><p>安装 Docker</p>
-<pre><code>yum install -y docker-ce docker-ce-cli containerd.io</code></pre><p>配置 Docker</p>
-<pre><code>$ cat &lt;&lt; EOF &gt; /etc/docker/daemon.json
-{
-&quot;insecure-registry&quot;: [
-    &quot;hub.hipstershop.cn&quot;,
-    &quot;reg.hipstershop.cn&quot;
-],
-&quot;registry-mirror&quot;: &quot;https://q00c7e05.mirror.aliyuncs.com&quot;,
-&quot;graph&quot;: &quot;/data1/docker&quot;
-}
-EOF</code></pre><p>启动Docker</p>
-<pre><code>systemctl enable docker &amp;&amp; systemctl start docker</code></pre><h2 id="所有节点安装kubeadm-kubelet-and-kubectl"><a href="#所有节点安装kubeadm-kubelet-and-kubectl" class="headerlink" title="所有节点安装kubeadm, kubelet and kubectl"></a>所有节点安装kubeadm, kubelet and kubectl</h2><p>kubelet版本要与待安装的Kubernetes版本相同，否则可能会出现一些难以预料的问题。</p>
-<pre><code>$ cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=0
-repo_gpgcheck=0
-gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
-       http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
-EOF</code></pre><p>通过 yum 安装软件包</p>
-<pre><code>yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes</code></pre><p>设置开机自动启动kubelet</p>
-<pre><code>systemctl enable kubelet.service</code></pre><h2 id="使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）"><a href="#使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）" class="headerlink" title="使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）"></a>使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）</h2><h3 id="创建第一个节点控制节点"><a href="#创建第一个节点控制节点" class="headerlink" title="创建第一个节点控制节点"></a>创建第一个节点控制节点</h3><p>创建配置文件 kubeadm-config.yaml：</p>
-<pre><code>apiVersion: kubeproxy.config.k8s.io/v1alpha1
-kind: KubeProxyConfiguration
-mode: &quot;ipvs&quot;
----
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v1.14.3
-apiServer:
-    certSANs:
-    - &quot;apiserver.hipstershop.cn&quot;
-    - &quot;172.16.1.50&quot;
-    - &quot;172.16.10.48&quot;
-    - &quot;172.16.10.49&quot;
-    - &quot;172.16.10.50&quot;
-    extraArgs:
-        allow-privileged: &quot;true&quot;
-        feature-gates: &quot;VolumeSnapshotDataSource=true,CSINodeInfo=true,    CSIDriverRegistry=true&quot;
-controlPlaneEndpoint: &quot;apiserver.hipstershop.cn:6443&quot;
-etcd:
-    local:
-        dataDir: /data1/etcd
-networking:
-    # This CIDR is a Canal default. Substitute or remove for your CNI     provider.
-    podSubnet: &quot;10.244.0.0/16&quot;
-controllerManager:
-    extraArgs:
-        address: 0.0.0.0
-scheduler:
-    extraArgs:
-        address: 0.0.0.0
-imageRepository: gcr.azk8s.cn/google-containers</code></pre><blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y yum-utils \</span><br><span class="line">device-mapper-persistent-data \</span><br><span class="line">lvm2</span><br></pre></td></tr></table></figure>
+
+<p>添加docker yum仓库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ yum-config-manager \</span><br><span class="line">--add-repo \</span><br><span class="line">https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo</span><br></pre></td></tr></table></figure>
+
+<p>安装 Docker</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y docker-ce docker-ce-cli containerd.io</span><br></pre></td></tr></table></figure>
+
+<p>配置 Docker</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ cat &lt;&lt; EOF &gt; /etc/docker/daemon.json</span><br><span class="line">&#123;</span><br><span class="line"><span class="string">"insecure-registry"</span>: [</span><br><span class="line">    <span class="string">"hub.hipstershop.cn"</span>,</span><br><span class="line">    <span class="string">"reg.hipstershop.cn"</span></span><br><span class="line">],</span><br><span class="line"><span class="string">"registry-mirror"</span>: <span class="string">"https://q00c7e05.mirror.aliyuncs.com"</span>,</span><br><span class="line"><span class="string">"graph"</span>: <span class="string">"/data1/docker"</span></span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>启动Docker</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ systemctl <span class="built_in">enable</span> docker &amp;&amp; systemctl start docker</span><br></pre></td></tr></table></figure>
+
+<h2 id="所有节点安装kubeadm-kubelet-and-kubectl"><a href="#所有节点安装kubeadm-kubelet-and-kubectl" class="headerlink" title="所有节点安装kubeadm, kubelet and kubectl"></a>所有节点安装kubeadm, kubelet and kubectl</h2><p>kubelet版本要与待安装的Kubernetes版本相同，否则可能会出现一些难以预料的问题。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo</span><br><span class="line">[kubernetes]</span><br><span class="line">name=Kubernetes</span><br><span class="line">baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=0</span><br><span class="line">repo_gpgcheck=0</span><br><span class="line">gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg</span><br><span class="line">       http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>通过 yum 安装软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes</span><br></pre></td></tr></table></figure>
+
+<p>设置开机自动启动kubelet</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ systemctl <span class="built_in">enable</span> kubelet.service</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）"><a href="#使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）" class="headerlink" title="使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）"></a>使用kubeadm创建高可用集群（数据平面和控制平面放置到一起）</h2><h3 id="创建第一个节点控制节点"><a href="#创建第一个节点控制节点" class="headerlink" title="创建第一个节点控制节点"></a>创建第一个节点控制节点</h3><p>创建配置文件 kubeadm-config.yaml：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">kubeproxy.config.k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">KubeProxyConfiguration</span></span><br><span class="line"><span class="attr">mode:</span> <span class="string">"ipvs"</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">kubeadm.k8s.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterConfiguration</span></span><br><span class="line"><span class="attr">kubernetesVersion:</span> <span class="string">v1.14.3</span></span><br><span class="line"><span class="attr">apiServer:</span></span><br><span class="line"><span class="attr">    certSANs:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">"apiserver.hipstershop.cn"</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">"172.16.1.50"</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">"172.16.10.48"</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">"172.16.10.49"</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">"172.16.10.50"</span></span><br><span class="line"><span class="attr">    extraArgs:</span></span><br><span class="line"><span class="attr">        allow-privileged:</span> <span class="string">"true"</span></span><br><span class="line"><span class="attr">        feature-gates:</span> <span class="string">"VolumeSnapshotDataSource=true,CSINodeInfo=true,    CSIDriverRegistry=true"</span></span><br><span class="line"><span class="attr">controlPlaneEndpoint:</span> <span class="string">"apiserver.hipstershop.cn:6443"</span></span><br><span class="line"><span class="attr">etcd:</span></span><br><span class="line"><span class="attr">    local:</span></span><br><span class="line"><span class="attr">        dataDir:</span> <span class="string">/data1/etcd</span></span><br><span class="line"><span class="attr">networking:</span></span><br><span class="line">    <span class="comment"># This CIDR is a Canal default. Substitute or remove for your CNI     provider.</span></span><br><span class="line"><span class="attr">    podSubnet:</span> <span class="string">"10.244.0.0/16"</span></span><br><span class="line"><span class="attr">controllerManager:</span></span><br><span class="line"><span class="attr">    extraArgs:</span></span><br><span class="line"><span class="attr">        address:</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span></span><br><span class="line"><span class="attr">scheduler:</span></span><br><span class="line"><span class="attr">    extraArgs:</span></span><br><span class="line"><span class="attr">        address:</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span></span><br><span class="line"><span class="attr">imageRepository:</span> <span class="string">gcr.azk8s.cn/google-containers</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
 <p>172.16.1.50 为APIServer的负载均衡IP，6443为负载均衡的端口。如果没有负载均可以通过 HaProxy自行搭建，参见<a href="https://github.com/findsec-cn/k200/raw/master/1.高可用性集群部署/kHaProxy负载均衡配置.md" target="_blank" rel="noopener">HaProxy负载均衡配置</a>。如果公司有硬件负载均衡如f5、Netscaler等可以直接使用；如果在各云平台可以使用各云平台的负载均衡（如阿里云的SLB）。<br>如果你不能直接访问gcr.io，需要设置imageRepository: gcr.azk8s.cn/google-containers。</p>
 </blockquote>
-<h3 id="初始化第一个节点"><a href="#初始化第一个节点" class="headerlink" title="初始化第一个节点"></a>初始化第一个节点</h3><pre><code>kubeadm init --config=kubeadm-config.yaml
-......
-[addons] Applied essential addon: CoreDNS
-[addons] Applied essential addon: kube-proxy
+<h3 id="初始化第一个节点"><a href="#初始化第一个节点" class="headerlink" title="初始化第一个节点"></a>初始化第一个节点</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm init --config=kubeadm-config.yaml</span><br><span class="line">......</span><br><span class="line">[addons] Applied essential addon: CoreDNS</span><br><span class="line">[addons] Applied essential addon: kube-proxy</span><br><span class="line"></span><br><span class="line">Your Kubernetes master has initialized successfully!</span><br><span class="line"></span><br><span class="line">To start using your cluster, you need to run the following as a regular user:</span><br><span class="line"></span><br><span class="line">mkdir -p <span class="variable">$HOME</span>/.kube</span><br><span class="line">sudo cp -i /etc/kubernetes/admin.conf <span class="variable">$HOME</span>/.kube/config</span><br><span class="line">sudo chown $(id -u):$(id -g) <span class="variable">$HOME</span>/.kube/config</span><br><span class="line"></span><br><span class="line">You should now deploy a pod network to the cluster.</span><br><span class="line">Run <span class="string">"kubectl apply -f [podnetwork].yaml"</span> with one of the options listed at:</span><br><span class="line">https://kubernetes.io/docs/concepts/cluster-administration/addons/</span><br><span class="line"></span><br><span class="line">You can now join any number of machines by running the following on each node</span><br><span class="line">as root:</span><br><span class="line"></span><br><span class="line">kubeadm join apiserver.hipstershop.com:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22</span><br></pre></td></tr></table></figure>
 
-Your Kubernetes master has initialized successfully!
-
-To start using your cluster, you need to run the following as a regular user:
-
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-You should now deploy a pod network to the cluster.
-Run &quot;kubectl apply -f [podnetwork].yaml&quot; with one of the options listed at:
-https://kubernetes.io/docs/concepts/cluster-administration/addons/
-
-You can now join any number of machines by running the following on each node
-as root:
-
-kubeadm join apiserver.hipstershop.com:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22</code></pre><blockquote>
+<blockquote>
 <p>注意：以上(kubeadm join)输出在其他节点加入时会使用，需要妥善保管</p>
 </blockquote>
 <h3 id="配置网络节点"><a href="#配置网络节点" class="headerlink" title="配置网络节点"></a>配置网络节点</h3><p>在此选择Canal网络组件，其他网络组建见：<a href="https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/" target="_blank" rel="noopener">https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/</a></p>
-<pre><code>$ mkdir -p $HOME/.kube
-$ cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-$ chown $(id -u):$(id -g) $HOME/.kube/config
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir -p <span class="variable">$HOME</span>/.kube</span><br><span class="line">$ cp -i /etc/kubernetes/admin.conf <span class="variable">$HOME</span>/.kube/config</span><br><span class="line">$ chown $(id -u):$(id -g) <span class="variable">$HOME</span>/.kube/config</span><br><span class="line"></span><br><span class="line">$ kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/canal/rbac.yaml</span><br><span class="line">$ kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/canal/canal.yaml</span><br></pre></td></tr></table></figure>
 
-$ kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/canal/rbac.yaml
-$ kubectl apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/canal/canal.yaml</code></pre><p>等待第一个节点 pod 都变为运行状态</p>
-<pre><code>kubectl get pod -n kube-system
-NAME                                       READY   STATUS    RESTARTS   AGE
-canal-xp9tm                                3/3     Running   0          79s
-coredns-86c58d9df4-d62mw                   1/1     Running   0          2m37s
-coredns-86c58d9df4-wq26g                   1/1     Running   0          2m37s
-etcd-k8s-m1.novalocal                      1/1     Running   0          2m3s
-kube-apiserver-k8s-m1.novalocal            1/1     Running   0          115s
-kube-controller-manager-k8s-m1.novalocal   1/1     Running   0          2m21s
-kube-proxy-t8x22                           1/1     Running   0          2m37s
-kube-scheduler-k8s-m1.novalocal            1/1     Running   0          2m12s</code></pre><h3 id="复制证书到其他控制节点"><a href="#复制证书到其他控制节点" class="headerlink" title="复制证书到其他控制节点"></a>复制证书到其他控制节点</h3><pre><code>USER=centos
-CONTROL_PLANE_IPS=&quot;172.16.10.49 172.16.10.50&quot;
-for host in ${CONTROL_PLANE_IPS}; do
-    scp /etc/kubernetes/pki/ca.crt &quot;${USER}&quot;@$host:
-    scp /etc/kubernetes/pki/ca.key &quot;${USER}&quot;@$host:
-    scp /etc/kubernetes/pki/sa.key &quot;${USER}&quot;@$host:
-    scp /etc/kubernetes/pki/sa.pub &quot;${USER}&quot;@$host:
-    scp /etc/kubernetes/pki/front-proxy-ca.crt &quot;${USER}&quot;@$host:
-    scp /etc/kubernetes/pki/front-proxy-ca.key &quot;${USER}&quot;@$host:
-    scp /etc/kubernetes/pki/etcd/ca.crt &quot;${USER}&quot;@$host:etcd-ca.crt
-    scp /etc/kubernetes/pki/etcd/ca.key &quot;${USER}&quot;@$host:etcd-ca.key
-    scp /etc/kubernetes/admin.conf &quot;${USER}&quot;@$host:
-done</code></pre><h3 id="登录第二、三个控制节点移动证书到正确位置"><a href="#登录第二、三个控制节点移动证书到正确位置" class="headerlink" title="登录第二、三个控制节点移动证书到正确位置"></a>登录第二、三个控制节点移动证书到正确位置</h3><pre><code>USER=centos
-mkdir -p /etc/kubernetes/pki/etcd
-mv /home/${USER}/ca.crt /etc/kubernetes/pki/
-mv /home/${USER}/ca.key /etc/kubernetes/pki/
-mv /home/${USER}/sa.pub /etc/kubernetes/pki/
-mv /home/${USER}/sa.key /etc/kubernetes/pki/
-mv /home/${USER}/front-proxy-ca.crt /etc/kubernetes/pki/
-mv /home/${USER}/front-proxy-ca.key /etc/kubernetes/pki/
-mv /home/${USER}/etcd-ca.crt /etc/kubernetes/pki/etcd/ca.crt
-mv /home/${USER}/etcd-ca.key /etc/kubernetes/pki/etcd/ca.key
-mv /home/${USER}/admin.conf /etc/kubernetes/admin.conf</code></pre><h3 id="将第二、三个控制节点加入集群"><a href="#将第二、三个控制节点加入集群" class="headerlink" title="将第二、三个控制节点加入集群"></a>将第二、三个控制节点加入集群</h3><blockquote>
+<p>等待第一个节点 pod 都变为运行状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pod -n kube-system</span><br><span class="line">NAME                                       READY   STATUS    RESTARTS   AGE</span><br><span class="line">canal-xp9tm                                3/3     Running   0          79s</span><br><span class="line">coredns-86c58d9df4-d62mw                   1/1     Running   0          2m37s</span><br><span class="line">coredns-86c58d9df4-wq26g                   1/1     Running   0          2m37s</span><br><span class="line">etcd-k8s-m1.novalocal                      1/1     Running   0          2m3s</span><br><span class="line">kube-apiserver-k8s-m1.novalocal            1/1     Running   0          115s</span><br><span class="line">kube-controller-manager-k8s-m1.novalocal   1/1     Running   0          2m21s</span><br><span class="line">kube-proxy-t8x22                           1/1     Running   0          2m37s</span><br><span class="line">kube-scheduler-k8s-m1.novalocal            1/1     Running   0          2m12s</span><br></pre></td></tr></table></figure>
+
+<h3 id="复制证书到其他控制节点"><a href="#复制证书到其他控制节点" class="headerlink" title="复制证书到其他控制节点"></a>复制证书到其他控制节点</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">USER=centos</span><br><span class="line">CONTROL_PLANE_IPS=<span class="string">"172.16.10.49 172.16.10.50"</span></span><br><span class="line"><span class="keyword">for</span> host <span class="keyword">in</span> <span class="variable">$&#123;CONTROL_PLANE_IPS&#125;</span>; <span class="keyword">do</span></span><br><span class="line">    scp /etc/kubernetes/pki/ca.crt <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line">    scp /etc/kubernetes/pki/ca.key <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line">    scp /etc/kubernetes/pki/sa.key <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line">    scp /etc/kubernetes/pki/sa.pub <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line">    scp /etc/kubernetes/pki/front-proxy-ca.crt <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line">    scp /etc/kubernetes/pki/front-proxy-ca.key <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line">    scp /etc/kubernetes/pki/etcd/ca.crt <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:etcd-ca.crt</span><br><span class="line">    scp /etc/kubernetes/pki/etcd/ca.key <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:etcd-ca.key</span><br><span class="line">    scp /etc/kubernetes/admin.conf <span class="string">"<span class="variable">$&#123;USER&#125;</span>"</span>@<span class="variable">$host</span>:</span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="登录第二、三个控制节点移动证书到正确位置"><a href="#登录第二、三个控制节点移动证书到正确位置" class="headerlink" title="登录第二、三个控制节点移动证书到正确位置"></a>登录第二、三个控制节点移动证书到正确位置</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">USER=centos</span><br><span class="line">mkdir -p /etc/kubernetes/pki/etcd</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/ca.crt /etc/kubernetes/pki/</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/ca.key /etc/kubernetes/pki/</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/sa.pub /etc/kubernetes/pki/</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/sa.key /etc/kubernetes/pki/</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/front-proxy-ca.crt /etc/kubernetes/pki/</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/front-proxy-ca.key /etc/kubernetes/pki/</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/etcd-ca.crt /etc/kubernetes/pki/etcd/ca.crt</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/etcd-ca.key /etc/kubernetes/pki/etcd/ca.key</span><br><span class="line">mv /home/<span class="variable">$&#123;USER&#125;</span>/admin.conf /etc/kubernetes/admin.conf</span><br></pre></td></tr></table></figure>
+
+<h3 id="将第二、三个控制节点加入集群"><a href="#将第二、三个控制节点加入集群" class="headerlink" title="将第二、三个控制节点加入集群"></a>将第二、三个控制节点加入集群</h3><blockquote>
 <p>注意：加入集群的命令请使用第一个节点安装完成后生生成的命令。</p>
 </blockquote>
-<pre><code># 在第二个控制节点执行
-$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22 --experimental-control-plane
-# 在第三个控制节点执行
-$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22 --experimental-control-plane</code></pre><h3 id="将从节点加入集群"><a href="#将从节点加入集群" class="headerlink" title="将从节点加入集群"></a>将从节点加入集群</h3><blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在第二个控制节点执行</span></span><br><span class="line">$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22 --experimental-control-plane</span><br><span class="line"><span class="comment"># 在第三个控制节点执行</span></span><br><span class="line">$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22 --experimental-control-plane</span><br></pre></td></tr></table></figure>
+
+<h3 id="将从节点加入集群"><a href="#将从节点加入集群" class="headerlink" title="将从节点加入集群"></a>将从节点加入集群</h3><blockquote>
 <p>注意：加入集群的命令请使用第一个节点安装完成后生生成的命令。</p>
 </blockquote>
-<pre><code># 在s1,s2,s3节点执行
-$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22</code></pre>
+<p>在k8s-s001，k8s-s002，k8s-s003节点执行如下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --discovery-token-ca-cert-hash sha256:b3b23ae7aea87baa02eda31f7fdbd2604e4cfa20a9f9c278671816d630f30d22</span><br></pre></td></tr></table></figure>
+
+
       
     </div>
 
@@ -337,7 +208,7 @@ $ kubeadm join apiserver.hipstershop.cn:6443 --token skvqhu.b297uimw0omi26w0 --d
 
     <span class="post-tags">
       <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubeadm/">kubeadm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/helm/">helm</a>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/helm/">helm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/kubeadm/">kubeadm</a>
     </span>
     
 
