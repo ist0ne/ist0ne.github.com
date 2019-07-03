@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>使用Terraform在阿里云创建Kubernetes集群资源 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="Docker、Kubernetes、Ceph、Saltstack、OpenStack 等技术分享">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="使用Terraform在阿里云创建Kubernetes集群资源">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>使用Terraform在阿里云创建Kubernetes集群资源</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/07/03/Use-Terraform-In-AliCloud/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-07-03T05:59:51.000Z">
+          2019-07-03
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>HashiCorp Terraform 是一个IT基础架构自动化编排工具，可以用代码来高效地预配和管理云基础架构。Terraform的命令行接口(CLI)提供一种简单机制，用于将配置文件部署到阿里云或其他任意支持的云上，并对其进行版本控制。</p>
+<p>Terraform是一个高度可扩展的工具，通过Provider来支持新的基础架构。您可以使用Terraform来创建、修改、删除ECS、VPC、RDS、SLB等多种资源。</p>
+<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><ul>
+<li><p><strong>将基础结构部署到多个云</strong> - Terraform适用于多云方案，将相类似的基础结构部署到阿里云、其他云提供商或者本地数据中心。开发人员能够使用相同的工具和相似的配置文件同时管理不同云提供商的资源。</p>
+</li>
+<li><p><strong>自动化管理基础结构</strong> - Terraform能够创建配置文件的模板，以可重复、可预测的方式定义、预配和配置ECS资源，减少因人为因素导致的部署和管理错误。能够多次部署同一模板，创建相同的开发、测试和生产环境。</p>
+</li>
+<li><p><strong>基础架构即代码（Infrastructure as Code）</strong> - 可以用代码来管理维护资源。允许保存基础设施状态，从而使您能够跟踪对系统（基础设施即代码）中不同组件所做的更改，并与其他人共享这些配置 。</p>
+</li>
+</ul>
+<h2 id="安装和配置Terraform"><a href="#安装和配置Terraform" class="headerlink" title="安装和配置Terraform"></a>安装和配置Terraform</h2><p>1、前往<a href="https://www.terraform.io/downloads.html" target="_blank" rel="noopener">Terraform官网</a>下载适用于您的操作系统的程序包。</p>
+<a id="more"></a>
+
+<p>2、将程序包解压到/usr/local/bin。</p>
+<p>3、运行terraform验证路径配置。</p>
+<p>将显示可用的Terraform选项的列表，类似如下所示，表示安装完成。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ terraform</span><br><span class="line">Usage: terraform [-version] [-<span class="built_in">help</span>] &lt;<span class="built_in">command</span>&gt; [args]</span><br></pre></td></tr></table></figure>
+
+<p>4、为提高权限管理的灵活性和安全性，建议您创建RAM用户，并为其授权。</p>
+<ul>
+<li>a. 登录 <a href="https://ram.console.aliyun.com/?spm=a2c63.p38356.879954.11.1aa1332eNuVkRH#/overview" target="_blank" rel="noopener">RAM控制台</a>。</li>
+<li>b. 创建名为Terraform的RAM用户，并为该用户创建AccessKey(访问方式选择编程访问)。</li>
+<li>c. 为RAM用户授权。点击 <code>添加权限</code>，需要为用户授予一下权限：</li>
+</ul>
+<p><img src="/imgs/201907/ali_ram_auth.jpg" alt="RAM用户授权"></p>
+<p>5、创建环境变量，用于存放身份认证信息。这些变量可以放到/etc/bashrc里，登录自动生效。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> ALICLOUD_ACCESS_KEY=<span class="string">"LTAIUrZCw3********"</span></span><br><span class="line"><span class="built_in">export</span> ALICLOUD_SECRET_KEY=<span class="string">"zfwwWAMWIAiooj14GQ2*************"</span></span><br><span class="line"><span class="built_in">export</span> ALICLOUD_REGION=<span class="string">"cn-beijing"</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="克隆项目代码"><a href="#克隆项目代码" class="headerlink" title="克隆项目代码"></a>克隆项目代码</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/ist0ne/terraform.git</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建资源"><a href="#创建资源" class="headerlink" title="创建资源"></a>创建资源</h2><p>此项目将创建以下资源：</p>
+<ul>
+<li>创建私有网络VPC及虚拟交换机</li>
+<li>创建NAT网关、EIP和SNAT条目</li>
+<li>创建1台堡垒机，可以通过堡垒机登录其它虚拟机</li>
+<li>默认创建3个Master节点和3个Worker节点</li>
+<li>创建负载均衡器SLB、监听及其使用的EIP</li>
+</ul>
+<h2 id="网络架构"><a href="#网络架构" class="headerlink" title="网络架构"></a>网络架构</h2><p>网络架构如下：</p>
+<p><img src="/imgs/201907/vpc.jpg" alt="网络架构"></p>
+<h2 id="如何使用"><a href="#如何使用" class="headerlink" title="如何使用"></a>如何使用</h2><ul>
+<li>可以按自己的需求修改<code>terraform.tfvars</code>配置的变量，包括虚拟机启动的地域、登录虚拟需要的SSH Key、VPC的网段、ECS的数量、规格等等。</li>
+<li>需要先在阿里云上创建一个秘钥对，秘钥对的名字要和terraform.tfvars定义的SSH_KEY_NAME对应。</li>
+<li>运行terraform创建所需资源</li>
+<li>资源创建好以后通过堡垒机外网IP登录堡垒机，然后将上面创建秘钥对使用的私钥拷贝的堡垒机的 $HOME/.ssh/id_rsa，并配置权限 chmod 600 $HOME/.ssh/id_rsa</li>
+</ul>
+<h2 id="运行terraform"><a href="#运行terraform" class="headerlink" title="运行terraform"></a>运行terraform</h2><h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ terraform init</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看要创建的资源"><a href="#查看要创建的资源" class="headerlink" title="查看要创建的资源"></a>查看要创建的资源</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ terraform plan</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建资源-1"><a href="#创建资源-1" class="headerlink" title="创建资源"></a>创建资源</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ terraform apply</span><br></pre></td></tr></table></figure>
+
+<h3 id="销毁资源"><a href="#销毁资源" class="headerlink" title="销毁资源"></a>销毁资源</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ terraform destroy</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/terraform/">terraform</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+  
+
+	<section id="comment" class="comment">
+		<div id="gitment"></div>
+	</section>
+	<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+	<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+	<script>
+		var gitment = new Gitment({
+			owner: 'ist0ne',
+			repo: 'gitment',
+			oauth: {
+				client_id: 'a3a5af94aef00fdf0c24',
+				client_secret: '3d47316b6b7d0b98ba405da19a65457357256f2d',
+			},
+		})
+		gitment.render('gitment')
+	</script>
+
+
+
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>

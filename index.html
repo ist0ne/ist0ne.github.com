@@ -65,6 +65,142 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/07/03/Use-Terraform-In-AliCloud/"><span>使用Terraform在阿里云创建Kubernetes集群资源</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/07/03/Use-Terraform-In-AliCloud/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-07-03T05:59:51.000Z">
+          2019-07-03
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>HashiCorp Terraform 是一个IT基础架构自动化编排工具，可以用代码来高效地预配和管理云基础架构。Terraform的命令行接口(CLI)提供一种简单机制，用于将配置文件部署到阿里云或其他任意支持的云上，并对其进行版本控制。</p>
+<p>Terraform是一个高度可扩展的工具，通过Provider来支持新的基础架构。您可以使用Terraform来创建、修改、删除ECS、VPC、RDS、SLB等多种资源。</p>
+<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><ul>
+<li><p><strong>将基础结构部署到多个云</strong> - Terraform适用于多云方案，将相类似的基础结构部署到阿里云、其他云提供商或者本地数据中心。开发人员能够使用相同的工具和相似的配置文件同时管理不同云提供商的资源。</p>
+</li>
+<li><p><strong>自动化管理基础结构</strong> - Terraform能够创建配置文件的模板，以可重复、可预测的方式定义、预配和配置ECS资源，减少因人为因素导致的部署和管理错误。能够多次部署同一模板，创建相同的开发、测试和生产环境。</p>
+</li>
+<li><p><strong>基础架构即代码（Infrastructure as Code）</strong> - 可以用代码来管理维护资源。允许保存基础设施状态，从而使您能够跟踪对系统（基础设施即代码）中不同组件所做的更改，并与其他人共享这些配置 。</p>
+</li>
+</ul>
+<h2 id="安装和配置Terraform"><a href="#安装和配置Terraform" class="headerlink" title="安装和配置Terraform"></a>安装和配置Terraform</h2><p>1、前往<a href="https://www.terraform.io/downloads.html" target="_blank" rel="noopener">Terraform官网</a>下载适用于您的操作系统的程序包。</p>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/terraform/">terraform</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2019/07/03/Use-Terraform-In-AliCloud/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
+    <h3 class="article-title"><a href="/2019/07/03/Kubernetes-Ingress-with-Cert-Manager/"><span>在Kubernetes Ingress中使用Cert-Manager管理TLS证书</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/07/03/Kubernetes-Ingress-with-Cert-Manager/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-07-03T05:32:06.000Z">
+          2019-07-03
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>Kubernetes Ingresses 允许你灵活的将外部流量路由到集群内部。我们通过Ingress资源定义规则路由HTTP和HTTPS流量到Kubernetes Services。本文中我们通过cert-manager来管理TLS证书以加密HTTP流量。</p>
+<h2 id="部署后端服务"><a href="#部署后端服务" class="headerlink" title="部署后端服务"></a>部署后端服务</h2><p>首先我们需要一个事例服务，部署配置文件(echo.yaml)如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">ports:</span></span><br><span class="line"><span class="attr">- port:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">    targetPort:</span> <span class="number">5678</span></span><br><span class="line"><span class="attr">selector:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">echo</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line"><span class="attr">template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">    labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">    containers:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">echo1</span></span><br><span class="line"><span class="attr">        image:</span> <span class="string">hashicorp/http-echo</span></span><br><span class="line"><span class="attr">        args:</span></span><br><span class="line"><span class="bullet">        -</span> <span class="string">"-text=echo"</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">        - containerPort:</span> <span class="number">5678</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个配置文件中我们定义了一个服务叫做<code>echo</code>，它会将来自于80端口的TCP流量路由到标签为<code>app: echo</code>的Pods中的5678端口上。<br>我们定义了名为<code>echo</code>的Deployment，它用来管理打了<code>app: echo</code>标签的Pods。我们在Deployment中定义Pod的副本数为2，Pod启动的容器名为<code>echo</code>，使用的镜像为<code>hashicorp/http-echo</code>，我们给<code>echo</code>传递了<code>text</code>参数，值为<code>echo</code>，意思是我们在访问这个服务时，他向我们返回<code>echo</code>字符串。最后，我们打开了5678端口来监听用户请求。</p>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/helm/">helm</a><a href="/tags/ingress/">ingress</a><a href="/tags/cert-manager/">cert-manager</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2019/07/03/Kubernetes-Ingress-with-Cert-Manager/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/07/02/Kubernetes-Addons/"><span>Kubernetes 常用组件安装</span></a></h3>
     
   
@@ -108,7 +244,7 @@
 
     <span class="post-tags">
       <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/helm/">helm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/dashboard/">dashboard</a><a href="/tags/traefik/">traefik</a>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/helm/">helm</a><a href="/tags/dashboard/">dashboard</a><a href="/tags/traefik/">traefik</a>
     </span>
     
 
@@ -192,7 +328,7 @@
 
     <span class="post-tags">
       <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/kubeadm/">kubeadm</a>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubeadm/">kubeadm</a><a href="/tags/kubectl/">kubectl</a>
     </span>
     
 
@@ -260,7 +396,7 @@
 
     <span class="post-tags">
       <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/helm/">helm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/kubeadm/">kubeadm</a>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubeadm/">kubeadm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/helm/">helm</a>
     </span>
     
 
@@ -606,146 +742,6 @@
         <i class="icon-comments"></i>
         <span>
           <a href="/2018/06/22/Run-Docker/#comment">评论</a>
-        </span>
-      </span>
-    </div>
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/06/11/Docker-Images/"><span>Docker 镜像</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/06/11/Docker-Images/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-06-11T06:20:40.000Z">
-          2018-06-11
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h2 id="最小镜像"><a href="#最小镜像" class="headerlink" title="最小镜像"></a>最小镜像</h2><p>镜像是 Docker 容器的基石，容器是镜像的实例，有了镜像才能启动容器。</p>
-<p>镜像到底包含什么呢？容器为什么是轻量级的虚拟化呢？</p>
-<p><img src="/imgs/201806/run_hello_world.png" alt="运行hello world"></p>
-<p>首先从一个最小的镜像hello-world讲起，hello-world镜像仅有1.85kB，根据经验它肯定是不包括Linux的内核的，因为现在Linux内核大小至少100MB以上。</p>
-<p>这么小的镜像，它能运行，是一个完整的镜像，他是怎么构建出来的呢？</p>
-<p><img src="/imgs/201806/dockerfile_hello_world.png" alt="hello world dockerfile"></p>
-<p>这个镜像的构建文件仅有三行，第一行从空白镜像开始构建，第二行拷贝二进制hello程序，第三行运行hello程序。</p>
-<p>/hello 就是文件系统的全部内容，连最基本的 /bin，/usr, /lib, /dev 都没有。</p>
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/image/">image</a>
-    </span>
-    
-
-    </div>
-
-    
-    <div class="article-meta pull-right">
-      <span>
-        <i class="icon-comments"></i>
-        <span>
-          <a href="/2018/06/11/Docker-Images/#comment">评论</a>
-        </span>
-      </span>
-    </div>
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/06/07/Hello-Docker/"><span>Hello Docker</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/06/07/Hello-Docker/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-06-07T10:41:33.000Z">
-          2018-06-07
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <h2 id="环境选择"><a href="#环境选择" class="headerlink" title="环境选择"></a>环境选择</h2><p>容器需要管理工具、运行时和操作系统，我们的选择如下：</p>
-<ul>
-<li><p>管理工具 - Docker Engine<br>因为 Docker 最流行使用最广泛</p>
-</li>
-<li><p>运行时 - runc<br>Docker 的默认 runtime</p>
-</li>
-<li><p>操作系统 - Ubuntu<br>选择大家熟悉的操作系统</p>
-</li>
-</ul>
-<h2 id="安装-Docker"><a href="#安装-Docker" class="headerlink" title="安装 Docker"></a>安装 Docker</h2><p>我们将在 ubuntu 16.04 虚拟机中安装 Docker。因为安装过程需要访问 internet， 所以虚拟机必须能够上网。</p>
-<p>Docker 支持几乎所有的 Linux 发行版，也支持 Mac 和 Windows。各操作系统的安装方法可以访问：<a href="https://docs.docker.com/install/" target="_blank" rel="noopener">https://docs.docker.com/install/</a></p>
-<p>Docker 分为开源免费的 CE（Community Edition）版本和收费的 EE（Enterprise Edition）版本。下面我们将按照文档，通过以下步骤在 Ubuntu 16.04 上安装 Docker CE 版本。</p>
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a>
-    </span>
-    
-
-    </div>
-
-    
-    <div class="article-meta pull-right">
-      <span>
-        <i class="icon-comments"></i>
-        <span>
-          <a href="/2018/06/07/Hello-Docker/#comment">评论</a>
         </span>
       </span>
     </div>

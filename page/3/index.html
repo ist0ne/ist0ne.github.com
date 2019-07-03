@@ -65,6 +65,168 @@
 
   
     
+    <h3 class="article-title"><a href="/2014/05/27/saltstack-example-introduction/"><span>Saltstack：网站架构介绍</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/05/27/saltstack-example-introduction/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-27T02:00:00.000Z">
+          2014-05-27
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>本文以一个小的电商网站（<a href="http://www.mall.com）为例，讲述Saltstack在真实场景中的应用。主要介绍如何使用salt对电商网站各种服务进行管理、基于角色对应用进行自动化监控、基于Saltstack" target="_blank" rel="noopener">www.mall.com）为例，讲述Saltstack在真实场景中的应用。主要介绍如何使用salt对电商网站各种服务进行管理、基于角色对应用进行自动化监控、基于Saltstack</a> runner的代码部署系统等，主要包括以下主题：</p>
+<ul>
+<li><a href="http://yoyolive.com/saltstack/2014/05/27/saltstack-example-introduction.html" target="_blank" rel="noopener">网站架构介绍</a></li>
+<li><a href="http://yoyolive.com/saltstack/2014/05/28/saltstack-install.html" target="_blank" rel="noopener">Saltstack安装</a></li>
+<li><a href="http://yoyolive.com/saltstack/2014/05/29/saltstack-base-service.html" target="_blank" rel="noopener">基础服务部署</a></li>
+<li><a href="http://yoyolive.com/saltstack/2014/06/14/saltstack-service.html" target="_blank" rel="noopener">服务部署</a></li>
+<li><a href="http://yoyolive.com/saltstack/2014/06/15/saltstack-publish.html" target="_blank" rel="noopener">代码部署系统搭建</a></li>
+<li><a href="http://yoyolive.com/saltstack/2014/06/16/saltstack-zabbix-monitor.html" target="_blank" rel="noopener">自动化监控</a></li>
+<li><a href="http://yoyolive.com/saltstack/2014/06/17/saltstack-expand.html" target="_blank" rel="noopener">Salt模块的扩展</a></li>
+</ul>
+<p>项目代码已放到GitHub上，地址：<a href="https://github.com/ist0ne/salt-states" target="_blank" rel="noopener">https://github.com/ist0ne/salt-states</a></p>
+<h2 id="网站架构介绍"><a href="#网站架构介绍" class="headerlink" title="网站架构介绍"></a>网站架构介绍</h2><h3 id="网络架构"><a href="#网络架构" class="headerlink" title="网络架构"></a>网络架构</h3><ol>
+<li>使用Haproxy做负载均衡，一主一备，当主服务器宕机后备服务器自动接替主服务器角色对外提供服务。</li>
+<li>WEB前端采用Nginx+PHP提供动态页面的访问；所有前端服务器通过NFS协议挂载共享存储，商品展示图片上传至存储中，图片访问时通过Varnish进行缓存加速。</li>
+<li>使用memcached做缓冲层来提高访问速度和减轻数据库的压力；使用Redis做队列服务。</li>
+<li>数据持久层使用MySQL，MySQL采用主从模式，通过主从分离提高访问速度。</li>
+<li>使用Salt对整个系统进行配置管理；使用Zabbix进行系统监控；所有服务器通过跳板机进行登录。</li>
+<li>使用SVN统一管理代码和配置信息。</li>
+</ol>
+<p><img src="/images/14-05-27/net.png" alt="网络架构"></p>
+<p>说明:上面网络架构未按实际服务器数量画出，具体服务器见角色划分部分。</p>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/Saltstack/">Saltstack</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/devops/">devops</a><a href="/tags/saltstack/">saltstack</a><a href="/tags/salt/">salt</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2014/05/27/saltstack-example-introduction/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
+    <h3 class="article-title"><a href="/2014/05/22/rpm-pkg/"><span>rpm打包</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2014/05/22/rpm-pkg/" rel="bookmark">
+        <time class="entry-date published" datetime="2014-05-22T02:00:00.000Z">
+          2014-05-22
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>为了方便批量进行软件安装，我们通常将源代码打包，放到yum仓库中进行统一管理，本文记录了一次rpm打包过程。</p>
+<h2 id="1、安装rpm-build"><a href="#1、安装rpm-build" class="headerlink" title="1、安装rpm-build"></a>1、安装rpm-build</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y rpm-build</span><br></pre></td></tr></table></figure>
+
+<h2 id="2、安装编译依赖包"><a href="#2、安装编译依赖包" class="headerlink" title="2、安装编译依赖包"></a>2、安装编译依赖包</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y make gcc gcc-c++ libtool autoconf automake imake</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、安装软件本身依赖的软件包"><a href="#3、安装软件本身依赖的软件包" class="headerlink" title="3、安装软件本身依赖的软件包"></a>3、安装软件本身依赖的软件包</h2><p>以CoreSeek安装为例，<a href="http://www.coreseek.cn/products-install/" target="_blank" rel="noopener">Coreseek</a> 是一款中文全文检索/搜索软件，以GPLv2许可协议开源发布，基于Sphinx研发并独立发布，专攻中文搜索和信息处理领域，适用于行业/垂直搜索、论坛/站内搜索、数据库搜索、文档/文献检索、信息检索、数据挖掘等应用场景。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y libxml2-devel expat-devel mysql-devel python-devel</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+      
+
+    <span class="post-categories">
+      <i class="icon-categories"></i>
+        <a href="/categories/其他/">其他</a>
+    </span>
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/rpm/">rpm</a><a href="/tags/rpm-build/">rpm-build</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2014/05/22/rpm-pkg/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2014/05/19/puppet-install/"><span>CentOS 6.4 Puppet 3.2.4安装</span></a></h3>
     
   

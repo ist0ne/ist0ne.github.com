@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>在Kubernetes Ingress中使用Cert-Manager管理TLS证书 | 石头记 | Docker、Kubernetes、CI/CD 等技术分享</title>
+
+  
+  <meta name="author" content="ist0ne">
+  
+
+  
+  <meta name="description" content="Docker、Kubernetes、Ceph、Saltstack、OpenStack 等技术分享">
+  
+
+  
+  <meta name="keywords" content="blog kubernetes k8s docker container ceph salt saltstack openstack kube kubectl helm charts gitlab git">
+  
+
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta property="og:title" content="在Kubernetes Ingress中使用Cert-Manager管理TLS证书">
+
+  <meta property="og:site_name" content="石头记">
+
+  
+  <meta property="og:image" content="/favicon.ico">
+  
+
+  <link href="/favicon.ico" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石头记" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+</head>
+
+
+<body>
+<div class="blog">
+  <div class="content">
+
+    <header>
+  <div class="site-branding">
+    <h1 class="site-title">
+      <a href="/">石头记</a>
+    </h1>
+    <p class="site-description">Docker、Kubernetes、CI/CD 等技术分享</p>
+  </div>
+  <nav class="site-navigation">
+    <ul>
+      
+        <li><a href="/">主页</a></li>
+      
+        <li><a href="/archives">归档</a></li>
+      
+        <li><a href="/atom.xml">订阅</a></li>
+      
+    </ul>
+  </nav>
+</header>
+
+    <main class="site-main posts-loop">
+    <article>
+
+  
+    
+    <h3 class="article-title"><span>在Kubernetes Ingress中使用Cert-Manager管理TLS证书</span></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/07/03/Kubernetes-Ingress-with-Cert-Manager/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-07-03T05:32:06.000Z">
+          2019-07-03
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>Kubernetes Ingresses 允许你灵活的将外部流量路由到集群内部。我们通过Ingress资源定义规则路由HTTP和HTTPS流量到Kubernetes Services。本文中我们通过cert-manager来管理TLS证书以加密HTTP流量。</p>
+<h2 id="部署后端服务"><a href="#部署后端服务" class="headerlink" title="部署后端服务"></a>部署后端服务</h2><p>首先我们需要一个事例服务，部署配置文件(echo.yaml)如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">ports:</span></span><br><span class="line"><span class="attr">- port:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">    targetPort:</span> <span class="number">5678</span></span><br><span class="line"><span class="attr">selector:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">echo</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line"><span class="attr">template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">    labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">    containers:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">echo1</span></span><br><span class="line"><span class="attr">        image:</span> <span class="string">hashicorp/http-echo</span></span><br><span class="line"><span class="attr">        args:</span></span><br><span class="line"><span class="bullet">        -</span> <span class="string">"-text=echo"</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">        - containerPort:</span> <span class="number">5678</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个配置文件中我们定义了一个服务叫做<code>echo</code>，它会将来自于80端口的TCP流量路由到标签为<code>app: echo</code>的Pods中的5678端口上。<br>我们定义了名为<code>echo</code>的Deployment，它用来管理打了<code>app: echo</code>标签的Pods。我们在Deployment中定义Pod的副本数为2，Pod启动的容器名为<code>echo</code>，使用的镜像为<code>hashicorp/http-echo</code>，我们给<code>echo</code>传递了<code>text</code>参数，值为<code>echo</code>，意思是我们在访问这个服务时，他向我们返回<code>echo</code>字符串。最后，我们打开了5678端口来监听用户请求。</p>
+<a id="more"></a>
+
+<p>现在，我们通过kubectl create将其部署到集群中</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create -f echo.yaml</span><br></pre></td></tr></table></figure>
+
+<p>确认部署的服务已经启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get svc <span class="built_in">echo</span></span><br><span class="line">NAME      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE</span><br><span class="line"><span class="built_in">echo</span>      ClusterIP   10.245.222.129   &lt;none&gt;        80/TCP    60s</span><br></pre></td></tr></table></figure>
+
+<p>在集群内部<code>echo</code>服务已经可以通过10.245.222.129的80端口进行访问，通过CLUSTER-IP访问流量会被路由到后端Pod的5678端口上。</p>
+<h2 id="部署Nginx-Ingress控制器"><a href="#部署Nginx-Ingress控制器" class="headerlink" title="部署Nginx Ingress控制器"></a>部署Nginx Ingress控制器</h2><p>在Kubernetes中，比较常用的Ingress控制器有Nginx、Contour、HaProxy、Traefik等。在此我们通过helm部署Nginx Ingress。</p>
+<p>我们通过执行kubectl apply来部署Nginx Ingress</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml</span><br><span class="line">namespace/ingress-nginx created</span><br><span class="line">configmap/nginx-configuration created</span><br><span class="line">configmap/tcp-services created</span><br><span class="line">configmap/udp-services created</span><br><span class="line">serviceaccount/nginx-ingress-serviceaccount created</span><br><span class="line">clusterrole.rbac.authorization.k8s.io/nginx-ingress-clusterrole created</span><br><span class="line">role.rbac.authorization.k8s.io/nginx-ingress-role created</span><br><span class="line">rolebinding.rbac.authorization.k8s.io/nginx-ingress-role-nisa-binding created</span><br><span class="line">clusterrolebinding.rbac.authorization.k8s.io/nginx-ingress-clusterrole-nisa-binding created</span><br><span class="line">deployment.extensions/nginx-ingress-controller created</span><br></pre></td></tr></table></figure>
+
+<p>如果你使用的是阿里云，可以创建一个4层SLB为Nginx Ingress做负载均衡。</p>
+<p>在你Kubernetes所在区，点击<code>创建负载均衡</code></p>
+<p><img src="/imgs/201907/ali_slb_create.jpg" alt="创建负载均衡"></p>
+<p>选择可用区，填写实例名，现在实例规则，然后点<code>击立即购买</code></p>
+<p><img src="/imgs/201907/ali_slb_create2.jpg" alt="配置负载均衡参数"></p>
+<p>跳转到<code>负载均衡控制台</code>，点击<code>点我开始配置</code></p>
+<p><img src="/imgs/201907/ali_slb_setting.jpg" alt="配置负载均衡参数"></p>
+<p>选择监听协议TCP，监听端口80</p>
+<p><img src="/imgs/201907/ali_slb_setting_tcp_80.jpg" alt="配置负载均衡监听端口80"></p>
+<p>点击<code>下一步</code>创建虚拟服务器组，后端服务添加Nginx Ingress所在的节点，端口为80端口，然后配置健康检查就可以了</p>
+<p><img src="/imgs/201907/ali_slb_setting_vsg_80.jpg" alt="创建虚拟服务器组"></p>
+<p>同样添加对TCP443端口的监听</p>
+<p><img src="/imgs/201907/ali_slb_setting_tcp_443.jpg" alt="配置负载均衡监听端口443"></p>
+<p>点击<code>下一步</code>创建虚拟服务器组，后端服务添加Nginx Ingress所在的节点，端口为443端口，然后配置健康检查就可以了</p>
+<p><img src="/imgs/201907/ali_slb_setting_vsg_443.jpg" alt="创建虚拟服务器组"></p>
+<p>到此，负载均衡就配置完成了。</p>
+<h2 id="创建Ingress资源"><a href="#创建Ingress资源" class="headerlink" title="创建Ingress资源"></a>创建Ingress资源</h2><p>现在就可以创建Ingress资源，如下编写配置文件（echo_ingress.yaml）：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo-ingress</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line"><span class="attr">- host:</span> <span class="string">echo.example.com</span></span><br><span class="line"><span class="attr">    http:</span></span><br><span class="line"><span class="attr">    paths:</span></span><br><span class="line"><span class="attr">    - backend:</span></span><br><span class="line"><span class="attr">        serviceName:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">        servicePort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+<p>当用户通过echo.example.com访问Ingress时，访问流量会被路由到echo这个服务的80端口上。</p>
+<p>我们需要经echo.example.com这个域名解析到我们上面配置4层负载均衡的外网地址上。后面通过Cert-Manager申请TLS证书时会验证对这个域名的控制权。</p>
+<p>通过curl访问域名会返回echo字符串说明配置无误</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl echo1.example.com</span><br><span class="line"><span class="built_in">echo</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="安装并配置Cert-Manager"><a href="#安装并配置Cert-Manager" class="headerlink" title="安装并配置Cert-Manager"></a>安装并配置Cert-Manager</h2><p>在通过helm安装Cert-Manager前需要先创建好CRD资源</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply \</span><br><span class="line">    -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.6/deploy/manifests/00-crds.yaml</span><br><span class="line">customresourcedefinition.apiextensions.k8s.io/certificates.certmanager.k8s.io created</span><br><span class="line">customresourcedefinition.apiextensions.k8s.io/issuers.certmanager.k8s.io created</span><br><span class="line">customresourcedefinition.apiextensions.k8s.io/clusterissuers.certmanager.k8s.io created</span><br><span class="line">customresourcedefinition.apiextensions.k8s.io/orders.certmanager.k8s.io created</span><br><span class="line">customresourcedefinition.apiextensions.k8s.io/challenges.certmanager.k8s.io created</span><br></pre></td></tr></table></figure>
+
+<p>为安装的namespace kube-system添加标签</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl label namespace kube-system certmanager.k8s.io/<span class="built_in">disable</span>-validation=<span class="string">"true"</span></span><br></pre></td></tr></table></figure>
+
+<p>然后，通过helm部署</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ helm install --name cert-manager --namespace kube-system stable/cert-manager</span><br><span class="line">NOTES:</span><br><span class="line">cert-manager has been deployed successfully!</span><br><span class="line"></span><br><span class="line">In order to begin issuing certificates, you will need to <span class="built_in">set</span> up a ClusterIssuer</span><br><span class="line">or Issuer resource (<span class="keyword">for</span> example, by creating a <span class="string">'letsencrypt-staging'</span> issuer).</span><br><span class="line"></span><br><span class="line">More information on the different types of issuers and how to configure them</span><br><span class="line">can be found <span class="keyword">in</span> our documentation:</span><br><span class="line"></span><br><span class="line">https://cert-manager.readthedocs.io/en/latest/reference/issuers.html</span><br><span class="line"></span><br><span class="line">For information on how to configure cert-manager to automatically provision</span><br><span class="line">Certificates <span class="keyword">for</span> Ingress resources, take a look at the `ingress-shim`</span><br><span class="line">documentation:</span><br><span class="line"></span><br><span class="line">https://cert-manager.readthedocs.io/en/latest/reference/ingress-shim.html</span><br></pre></td></tr></table></figure>
+
+<p>创建预发环境 Cluster Issuer（letsencrypt-clusterissuer-staging.yaml）</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">certmanager.k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterIssuer</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">letsencrypt-staging</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">acme:</span></span><br><span class="line">    <span class="comment"># The ACME server URL</span></span><br><span class="line"><span class="attr">    server:</span> <span class="attr">https://acme-staging-v02.api.letsencrypt.org/directory</span></span><br><span class="line">    <span class="comment"># Email address used for ACME registration</span></span><br><span class="line"><span class="attr">    email:</span> <span class="string">&lt;admin@gmail.com&gt;</span></span><br><span class="line">    <span class="comment"># Name of a secret used to store the ACME account private key</span></span><br><span class="line"><span class="attr">    privateKeySecretRef:</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">letsencrypt-staging</span></span><br><span class="line">    <span class="comment"># Enable the HTTP-01 challenge provider</span></span><br><span class="line"><span class="attr">    http01:</span> <span class="string">&#123;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这是一个预备环境的集群级别的Issuer，需要用这个接口把流程走通。Cert-Manager通过这个Issuer去letsencrypt申请证书，在这个Issuer定义了letsencrypt证书申请地址，letsencrypt通过HTTP访问约定好的一个地址来进行域名鉴权。</p>
+<p>创建Issuer</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create -f letsencrypt-clusterissuer-staging.yaml</span><br><span class="line">clusterissuer.certmanager.k8s.io/letsencrypt-staging created</span><br></pre></td></tr></table></figure>
+
+<p>修改echo_ingress.yaml使用新创建的Issuer</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo-ingress</span></span><br><span class="line"><span class="attr">annotations:</span>  </span><br><span class="line">    <span class="string">kubernetes.io/ingress.class:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="string">certmanager.k8s.io/cluster-issuer:</span> <span class="string">letsencrypt-staging</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">tls:</span></span><br><span class="line"><span class="attr">- hosts:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">echo.example.com</span></span><br><span class="line"><span class="attr">    secretName:</span> <span class="string">letsencrypt-staging</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line"><span class="attr">- host:</span> <span class="string">echo.example.com</span></span><br><span class="line"><span class="attr">    http:</span></span><br><span class="line"><span class="attr">    paths:</span></span><br><span class="line"><span class="attr">    - backend:</span></span><br><span class="line"><span class="attr">        serviceName:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">        servicePort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+<p>添加annotations，使用nginx ingress，并且使用letsencrypt-staging这个Issuer去申请证书，证书存储在<code>secretName: letsencrypt-staging</code></p>
+<p>使用<code>kubectl describe</code>查看证书详情</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl describe ingress</span><br><span class="line">Events:</span><br><span class="line">  Type    Reason             Age               From                      Message</span><br><span class="line">  ----    ------             ----              ----                      -------</span><br><span class="line">  Normal  CREATE             14m               nginx-ingress-controller  Ingress default/<span class="built_in">echo</span>-ingress</span><br><span class="line">  Normal  UPDATE             1m (x2 over 13m)  nginx-ingress-controller  Ingress default/<span class="built_in">echo</span>-ingress</span><br><span class="line">  Normal  CreateCertificate  1m                cert-manager              Successfully created Certificate <span class="string">"letsencrypt-staging"</span></span><br></pre></td></tr></table></figure>
+
+<p>发现证书已经申请成功</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ wget --save-headers -O- https://echo.example.com</span><br><span class="line">URL transformed to HTTPS due to an HSTS policy</span><br><span class="line">--2018-12-11 14:38:24--  https://echo.example.com/</span><br><span class="line">Resolving echo.example.com (echo.example.com)... 203.0.113.0</span><br><span class="line">Connecting to echo.example.com (echo.example.com)|203.0.113.0|:443... connected.</span><br><span class="line">ERROR: cannot verify echo.example.com<span class="string">'s certificate, issued by ‘CN=Fake LE Intermediate X1’:</span></span><br><span class="line"><span class="string">Unable to locally verify the issuer'</span>s authority.</span><br><span class="line">To connect to echo.example.com insecurely, use `--no-check-certificate<span class="string">'.</span></span><br></pre></td></tr></table></figure>
+
+<p>HTTPS协议已经可以访问，但是证书是ERROR状态的，我们需要申请生成环境的证书</p>
+<p>创建生产环境 Cluster Issuer（letsencrypt-clusterissuer-prod.yaml）</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">certmanager.k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterIssuer</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">letsencrypt-prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">acme:</span></span><br><span class="line">    <span class="comment"># The ACME server URL</span></span><br><span class="line"><span class="attr">    server:</span> <span class="attr">https://acme-v02.api.letsencrypt.org/directory</span></span><br><span class="line">    <span class="comment"># Email address used for ACME registration</span></span><br><span class="line"><span class="attr">    email:</span> <span class="string">&lt;admin@gmail.com&gt;</span></span><br><span class="line">    <span class="comment"># Name of a secret used to store the ACME account private key</span></span><br><span class="line"><span class="attr">    privateKeySecretRef:</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">letsencrypt-prod</span></span><br><span class="line">    <span class="comment"># Enable the HTTP-01 challenge provider</span></span><br><span class="line"><span class="attr">    http01:</span> <span class="string">&#123;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>创建Issuer</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create -f letsencrypt-clusterissuer-prod.yaml</span><br><span class="line">clusterissuer.certmanager.k8s.io/letsencrypt-prod created</span><br></pre></td></tr></table></figure>
+
+<p>编辑echo_ingress.yaml使用新创建的Issuer</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">echo-ingress</span></span><br><span class="line"><span class="attr">annotations:</span>  </span><br><span class="line">    <span class="string">kubernetes.io/ingress.class:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="string">certmanager.k8s.io/cluster-issuer:</span> <span class="string">letsencrypt-prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">tls:</span></span><br><span class="line"><span class="attr">- hosts:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">echo.example.com</span></span><br><span class="line"><span class="attr">    secretName:</span> <span class="string">letsencrypt-prod</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line"><span class="attr">- host:</span> <span class="string">echo.example.com</span></span><br><span class="line"><span class="attr">    http:</span></span><br><span class="line"><span class="attr">    paths:</span></span><br><span class="line"><span class="attr">    - backend:</span></span><br><span class="line"><span class="attr">        serviceName:</span> <span class="string">echo</span></span><br><span class="line"><span class="attr">        servicePort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+<p>执行命令是更改生效</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f echo_ingress.yaml</span><br></pre></td></tr></table></figure>
+
+<p>查看证书申请详情：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl describe certificate letsencrypt-prod</span><br><span class="line">  Events:</span><br><span class="line">  Type    Reason         Age    From          Message</span><br><span class="line">  ----    ------         ----   ----          -------</span><br><span class="line">  Normal  Generated      2m53s  cert-manager  Generated new private key</span><br><span class="line">  Normal  OrderCreated   2m53s  cert-manager  Created Order resource <span class="string">"letsencrypt-prod-3570505900"</span></span><br><span class="line">  Normal  OrderComplete  77s    cert-manager  Order <span class="string">"letsencrypt-prod-3570505900"</span> completed successfully</span><br><span class="line">  Normal  CertIssued     77s    cert-manager  Certificate issued successfully</span><br></pre></td></tr></table></figure>
+
+<p>发现证书已经申请成功</p>
+<p>我们可以通过 kubectl describe order 查看证书订单，通过kubectl describe challenge查看证书验证通道，证书默认是有有效期的，在证书失效以前Cert-Manager会帮我申请新证书。</p>
+<p>在浏览器中访问<a href="https://echo.example.com，可以查看到域名的证书。" target="_blank" rel="noopener">https://echo.example.com，可以查看到域名的证书。</a></p>
+<p><img src="/imgs/201907/tls.jpg" alt="域名证书"></p>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/helm/">helm</a><a href="/tags/ingress/">ingress</a><a href="/tags/cert-manager/">cert-manager</a>
+    </span>
+    
+
+    </div>
+
+    
+  </div>
+</article>
+
+  
+
+	<section id="comment" class="comment">
+		<div id="gitment"></div>
+	</section>
+	<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+	<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+	<script>
+		var gitment = new Gitment({
+			owner: 'ist0ne',
+			repo: 'gitment',
+			oauth: {
+				client_id: 'a3a5af94aef00fdf0c24',
+				client_secret: '3d47316b6b7d0b98ba405da19a65457357256f2d',
+			},
+		})
+		gitment.render('gitment')
+	</script>
+
+
+
+
+
+    </main>
+
+    <footer class="site-footer">
+  <p class="site-info">
+    Proudly powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and
+    Theme by <a href="https://github.com/CodeDaraW/Hacker" target="_blank">Hacker</a>
+    </br>
+    
+    &copy; 2019 ist0ne
+    
+  </p>
+</footer>
+    
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-39923501-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+  </div>
+</div>
+</body>
+</html>
