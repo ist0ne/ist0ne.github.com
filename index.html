@@ -65,6 +65,109 @@
 
   
     
+    <h3 class="article-title"><a href="/2019/09/18/Kubernetes-1-0/"><span>Kubernetes 技术实践 -- 1.0 课程简介</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2019/09/18/Kubernetes-1-0/" rel="bookmark">
+        <time class="entry-date published" datetime="2019-09-18T09:22:22.000Z">
+          2019-09-18
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p></p>
+<video id="video" controls preload="none" poster="/imgs/k8s.png">
+      <source id="mp4" src="https://www.bilibili.com/video/av49387629/?p=21" type="video/mp4">
+      <p>Your user agent does not support the HTML5 Video element.</p>
+</video>
+
+<p>为了让大家有更真实的体验，在这个培训课程中，我虚拟了一家互联网创业公司，而我们就是这家创业公司的技术人员，我们要从0开始为这家创业公司搭建IT环境，我们的所有服务都是容器化的，并运行在Kubernetes高可用集群上。我们的产品是由十一个微服务组成时尚购物网站，这十一个微服务由不同的语言写成，包括Java、Go、Python、Node.js和C#。我们通过CI/CD流水线驱动这些服务的开发迭代，并通过Istio进行服务治理，我们可以通过蓝绿部署、金丝雀部署、服务限流、熔断、链路追踪等技术来提升客户体验。我们为这家虚拟公司购买了域名（hipstershop.cn）和SSL证书，并完成了备案-_^，接下来，我们将一起完成这家公司的IT环境搭建。</p>
+<h2 id="能学到什么？"><a href="#能学到什么？" class="headerlink" title="能学到什么？"></a>能学到什么？</h2><ul>
+<li><strong>搭建生产环境可用的Kubernetes集群</strong> 我会从Kubernetes的架构开始讲起，然后给大家介绍Kubernetes的主要组件以及一些基本概念，带大家一起部署一个生产环境可用的Kubernetes集群，安装Kubernetes常用的插件，接下来为大家讲解在生成环境如何去升级已有的Kubernetes集群，最后为大家介绍如何轻松管理多个Kubernetes集群；</li>
+<li><strong>Kubernetes编排基础</strong> 我会详细向大家讲解Pod基础与进阶，包括Pod的原理，API对象、Pod资源限制、Pod健康检查、生命周期管理、共享卷、Pod调度相关知识及生产环境建议及操作实践；Kubernetes常用资源对象，主要包括ReplicaSet、Deployment、StatefulSet、DeamonSet、Job等等；权限管理，包括ServiceAccount介绍、RBAC基于角色的访问控制等等；</li>
+<li><strong>Kubernetes容器持久化存储</strong> 我会向大家你讲解容器卷、PV、PVC、StorageClass以及本地化持久存储相关的知识，最后会带大家实践如何使用Ceph分布式存储和阿里云云盘作为Kubernetes容器持久化存储；</li>
+<li><strong>Kubernetes网络选型</strong> 我会向大家讲解容器跨主机网络、Kubernetes网络模型与CNI网络插件、常用的三层网络方案、以及Kubernetes服务发现，包括集群内部服务发现(Servcie)、集群外部服务访问(Ingress)、Headlss服务、CoreDNS以及4/7层服务发现实践；</li>
+<li><strong>Kubernetes包管理工具Helm</strong> 我会向大家讲解如何搭建私有Helm仓库、如何使用Helm仓库、如何编写Helm Charts，并带领大家为我们网站的微服务编写charts，并上传等到私有Helm仓库；</li>
+<li><strong>部署企业级私有仓库</strong> 我会带领大家一起部署企业级代码管理平台Gitlab和容器私有仓库Harbor，学完这部分内容你将掌握如何通过容器化的方式部署Gitlab和Harbor，以及Gitlab和Harbor的基本使用；</li>
+<li><strong>CI/CD流水线</strong> 我会向大家讲解CI/CD流水线技术，并带大家认识几种CI/CD产品，介绍他们如何配置、使用，然后带大家使用CI/CD流水线将我们的网站部署到Kubernetes集群上，通过使用CI/CD流水线来提升我们的开发、测试、部署流程的自动化水平；</li>
+<li><strong>Kubernetes日志管理</strong> 我会向大家讲解Kubernetes日志处理的基本原理，以及如何通过EFK收集Kubernetes集群的日志及微服务产生的日志；</li>
+<li><strong>Kubernetes监控</strong> 我会向大家讲解Kubernetes监控原理，如何部署Prometheus，并使用它进行集群及应用监控，结合AlertManager实现故障告警；</li>
+<li><strong>通过Istio实现服务治理</strong> 我会向大家讲解Istio是什么，他能做什么，以及如何使用Istio实现微服务服务的蓝绿部署、金丝雀部署，如何对服务进行限流、熔断和链路追踪。</li>
+</ul>
+<h2 id="学员收获"><a href="#学员收获" class="headerlink" title="学员收获"></a>学员收获</h2><ul>
+<li>从0-1全系统化学习Kubernetes，对调度系统、网络、存储、日志监控、CI/CD、服务治理等有全局了解，熟悉学习路线</li>
+<li>提高Kubernetes技术在企业落地效率，生产实践路上少走弯路</li>
+<li>熟悉Kubernetes生产最佳实践，避免踩坑</li>
+<li>专属QQ交流群，有任何问题老师会在群里给大家答疑</li>
+<li>代码开放，课程案例代码完全开发给你，你可以根据所学知识自行修改、优化</li>
+</ul>
+<h2 id="适合人群"><a href="#适合人群" class="headerlink" title="适合人群"></a>适合人群</h2><ul>
+<li>容器基础薄弱，但对容器生态技术有浓厚兴趣的小伙伴</li>
+<li>已经将容器用于生产环境，但是希望获得最佳实践，避免少走弯路的小伙伴</li>
+<li>对容器技术有一定了解和接触，期望系统化的深入理解的小伙伴</li>
+<li>容器技术爱好者、云计算从业者、运维工程师、容器项目开发工程师、架构师</li>
+</ul>
+<h2 id="技术储备要求"><a href="#技术储备要求" class="headerlink" title="技术储备要求"></a>技术储备要求</h2><ul>
+<li>熟悉基本Linux操作，对CentOS、Ubuntu等系统有一定的了解。熟悉Linux基本命令行操作，熟悉软件包安装、升级方法，有基本的排查能力。</li>
+<li>熟悉Docker容器概念与原理，如果对容器基础概念不熟悉建议先学习：<a href="https://github.com/findsec-cn/docker课程" target="_blank" rel="noopener">https://github.com/findsec-cn/docker课程</a></li>
+<li>熟悉YAML语法，如果不是熟悉建议参考学习：<a href="http://www.ruanyifeng.com/blog/2016/07/yaml.html" target="_blank" rel="noopener">http://www.ruanyifeng.com/blog/2016/07/yaml.html</a></li>
+</ul>
+<h2 id="课程优势"><a href="#课程优势" class="headerlink" title="课程优势"></a>课程优势</h2><ul>
+<li>系统化：网上很多课程只讲某些章节，例如，安装、监控、某几个组件；缺少系统化学习，很难对各个模块相互之间联系进行深入了解。</li>
+<li>生产化：老师不仅仅分享实操、理论，更重要是分享在生产环境实践经验，以及运维过程中踩过的一些坑。</li>
+<li>新版本：我们选择了Kubernetes的新版本（1.14.x-1.15.x）为大家讲解。如果有新版本发布，我们还会向大家讲解如何进行Kubernetes版本升级。</li>
+</ul>
+
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/kubernetes/">kubernetes</a><a href="/tags/k8s/">k8s</a><a href="/tags/helm/">helm</a><a href="/tags/kubectl/">kubectl</a><a href="/tags/dashboard/">dashboard</a><a href="/tags/traefik/">traefik</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2019/09/18/Kubernetes-1-0/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2019/07/20/gitlab-install/"><span>Gitlab部署和基本使用</span></a></h3>
     
   
@@ -672,81 +775,6 @@
         <i class="icon-comments"></i>
         <span>
           <a href="/2018/09/10/Docker-Compose/#comment">评论</a>
-        </span>
-      </span>
-    </div>
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2018/09/10/Docker-Volume/"><span>Docker 存储</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2018/09/10/Docker-Volume/" rel="bookmark">
-        <time class="entry-date published" datetime="2018-09-10T03:59:34.000Z">
-          2018-09-10
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>Docker 为容器提供了两种存放数据的资源：</p>
-<ul>
-<li>由 Storage Driver 管理的镜像层和容器层</li>
-<li>Data Volume</li>
-</ul>
-<h3 id="Storage-Driver"><a href="#Storage-Driver" class="headerlink" title="Storage Driver"></a>Storage Driver</h3><p><img src="/imgs/201809/docker_image_layer.png" alt="镜像分层结构"></p>
-<p>容器由最上面一个可写的容器层，以及若干只读的镜像层组成，容器的数据就存放在这些层中。这样的分层结构最大的特性是 Copy-on-Write：</p>
-<ul>
-<li>新数据会直接存放在最上面的容器层</li>
-<li>修改现有数据会先从镜像层将数据复制到容器层，修改后的数据直接保存在容器层中，镜像层保持不变</li>
-<li>如果多个层中有命名相同的文件，用户只能看到最上面那层中的文件</li>
-</ul>
-<p>分层结构使镜像和容器的创建、共享以及分发变得非常高效，而这些都要归功于 Docker storage driver。正是 storage driver 实现了多层数据的堆叠并为用户提供一个单一的合并之后的统一视图。</p>
-<p>Docker 支持多种 storage driver，有 AUFS、Device Mapper、Btrfs、OverlayFS、VFS 和 ZFS。它们都能实现分层的架构，同时又有各自的特性。对于 Docker 用户来说，具体选择使用哪个 storage driver 是一个难题，不过 Docker 官方给出了一个简单的答案：优先使用 Linux 发行版默认的 storage driver。Docker 安装时会根据当前系统的配置选择默认的 driver。默认 driver 具有最好的稳定性，因为默认 driver 在发行版上经过了严格的测试。</p>
-<p><strong>Docker CE on Ubuntu</strong> aufs, devicemapper, overlay2 (Ubuntu 14.04.4 or later, 16.04 or later), overlay, zfs, vfs<br><strong>Docker CE on Debian</strong> aufs, devicemapper, overlay2 (Debian Stretch), overlay, vfs<br><strong>Docker CE on CentOS</strong> devicemapper, vfs<br><strong>Docker CE on Fedora</strong> devicemapper, overlay2 (Fedora 26 or later, experimental), overlay (experimental), vfs</p>
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/volume/">volume</a>
-    </span>
-    
-
-    </div>
-
-    
-    <div class="article-meta pull-right">
-      <span>
-        <i class="icon-comments"></i>
-        <span>
-          <a href="/2018/09/10/Docker-Volume/#comment">评论</a>
         </span>
       </span>
     </div>

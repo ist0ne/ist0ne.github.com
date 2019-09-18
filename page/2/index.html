@@ -65,6 +65,81 @@
 
   
     
+    <h3 class="article-title"><a href="/2018/09/10/Docker-Volume/"><span>Docker 存储</span></a></h3>
+    
+  
+
+  <div class="article-top-meta">
+    <span class="posted-on">
+      <a href="/2018/09/10/Docker-Volume/" rel="bookmark">
+        <time class="entry-date published" datetime="2018-09-10T03:59:34.000Z">
+          2018-09-10
+        </time>
+      </a>
+    </span>
+  </div>
+
+
+  
+
+  <div class="article-content">
+    <div class="entry">
+      
+        <p>Docker 为容器提供了两种存放数据的资源：</p>
+<ul>
+<li>由 Storage Driver 管理的镜像层和容器层</li>
+<li>Data Volume</li>
+</ul>
+<h3 id="Storage-Driver"><a href="#Storage-Driver" class="headerlink" title="Storage Driver"></a>Storage Driver</h3><p><img src="/imgs/201809/docker_image_layer.png" alt="镜像分层结构"></p>
+<p>容器由最上面一个可写的容器层，以及若干只读的镜像层组成，容器的数据就存放在这些层中。这样的分层结构最大的特性是 Copy-on-Write：</p>
+<ul>
+<li>新数据会直接存放在最上面的容器层</li>
+<li>修改现有数据会先从镜像层将数据复制到容器层，修改后的数据直接保存在容器层中，镜像层保持不变</li>
+<li>如果多个层中有命名相同的文件，用户只能看到最上面那层中的文件</li>
+</ul>
+<p>分层结构使镜像和容器的创建、共享以及分发变得非常高效，而这些都要归功于 Docker storage driver。正是 storage driver 实现了多层数据的堆叠并为用户提供一个单一的合并之后的统一视图。</p>
+<p>Docker 支持多种 storage driver，有 AUFS、Device Mapper、Btrfs、OverlayFS、VFS 和 ZFS。它们都能实现分层的架构，同时又有各自的特性。对于 Docker 用户来说，具体选择使用哪个 storage driver 是一个难题，不过 Docker 官方给出了一个简单的答案：优先使用 Linux 发行版默认的 storage driver。Docker 安装时会根据当前系统的配置选择默认的 driver。默认 driver 具有最好的稳定性，因为默认 driver 在发行版上经过了严格的测试。</p>
+<p><strong>Docker CE on Ubuntu</strong> aufs, devicemapper, overlay2 (Ubuntu 14.04.4 or later, 16.04 or later), overlay, zfs, vfs<br><strong>Docker CE on Debian</strong> aufs, devicemapper, overlay2 (Debian Stretch), overlay, vfs<br><strong>Docker CE on CentOS</strong> devicemapper, vfs<br><strong>Docker CE on Fedora</strong> devicemapper, overlay2 (Fedora 26 or later, experimental), overlay (experimental), vfs</p>
+      
+    </div>
+
+  </div>
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+
+    
+
+    
+    
+
+    <span class="post-tags">
+      <i class="icon-tags"></i>
+        <a href="/tags/docker/">docker</a><a href="/tags/container/">container</a><a href="/tags/volume/">volume</a>
+    </span>
+    
+
+    </div>
+
+    
+    <div class="article-meta pull-right">
+      <span>
+        <i class="icon-comments"></i>
+        <span>
+          <a href="/2018/09/10/Docker-Volume/#comment">评论</a>
+        </span>
+      </span>
+    </div>
+    
+  </div>
+</article>
+
+
+
+  <article>
+
+  
+    
     <h3 class="article-title"><a href="/2018/07/02/Docker-Network/"><span>Docker 网络</span></a></h3>
     
   
@@ -700,79 +775,6 @@
         <i class="icon-comments"></i>
         <span>
           <a href="/2014/06/15/saltstack-publish/#comment">评论</a>
-        </span>
-      </span>
-    </div>
-    
-  </div>
-</article>
-
-
-
-  <article>
-
-  
-    
-    <h3 class="article-title"><a href="/2014/06/14/saltstack-service/"><span>Saltstack：服务部署</span></a></h3>
-    
-  
-
-  <div class="article-top-meta">
-    <span class="posted-on">
-      <a href="/2014/06/14/saltstack-service/" rel="bookmark">
-        <time class="entry-date published" datetime="2014-06-14T02:00:00.000Z">
-          2014-06-14
-        </time>
-      </a>
-    </span>
-  </div>
-
-
-  
-
-  <div class="article-content">
-    <div class="entry">
-      
-        <p>本文以web服务器为例介绍salt服务的部署。把不同的服务组织成不同的角色，然后将角色应用到不同的节点上。通过角色的划分能够清晰的对不同的服务模块进行组织，所有角色的配置放到/srv/salt/roles下，角色用到的相关变量放到/srv/pillar/roles和/srv/pillar/nodes下，其中/srv/pillar/nodes下放置与具体节点相关的变量。</p>
-<h3 id="角色与配置文件"><a href="#角色与配置文件" class="headerlink" title="角色与配置文件"></a>角色与配置文件</h3><p>/srv/salt/roles/web.sls配置如下，包括nginx模块、rsync模块、limits模块和nfs.client：</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">include:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">nginx</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">rsync</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">limits</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">nfs.client</span></span><br></pre></td></tr></table></figure>
-
-<p>变量/srv/pillar/roles/web.sls如下，没有单独应用到节点的变量:</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">hostgroup:</span> <span class="string">web</span>  <span class="comment"># 定义zabbix分组，具体见后文的自动化监控一节</span></span><br><span class="line"><span class="attr">vhostsdir:</span> <span class="string">/data1/vhosts</span>  <span class="comment"># 代码发布目录</span></span><br><span class="line"><span class="attr">vhostscachedir:</span> <span class="string">/data1/cache</span>  <span class="comment"># 程序临时目录</span></span><br><span class="line"><span class="attr">logdir:</span> <span class="string">/data1/logs</span>  <span class="comment"># nginx日志目录</span></span><br><span class="line"><span class="attr">vhosts:</span>  <span class="comment"># 虚拟主机名，用于创建对用的代码发布目录</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">www.mall.com</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">static.mall.com</span></span><br><span class="line"><span class="attr">limit_users:</span>  <span class="comment"># 对用户打开文件数做设置</span></span><br><span class="line"><span class="attr">  nginx:</span></span><br><span class="line"><span class="attr">    limit_hard:</span> <span class="number">65535</span></span><br><span class="line"><span class="attr">    limit_soft:</span> <span class="number">65535</span></span><br><span class="line"><span class="attr">    limit_type:</span> <span class="string">nofile</span></span><br><span class="line"><span class="attr">mounts:</span> <span class="comment"># nfs共享存储挂载相关配置</span></span><br><span class="line">  <span class="string">/data1/vhosts/static.mall.com/htdocs:</span></span><br><span class="line"><span class="attr">    device:</span> <span class="number">172.16</span><span class="number">.100</span><span class="number">.71</span><span class="string">:/data1/share</span></span><br><span class="line"><span class="attr">    fstype:</span> <span class="string">nfs</span></span><br><span class="line"><span class="attr">    mkmnt:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">    opts:</span> <span class="string">async,noatime,noexec,nosuid,soft,timeo=3,retrans=3,intr,retry=3,rsize=16384,wsize=16384</span></span><br></pre></td></tr></table></figure>
-      
-    </div>
-
-  </div>
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-
-    
-      
-
-    <span class="post-categories">
-      <i class="icon-categories"></i>
-        <a href="/categories/Saltstack/">Saltstack</a>
-    </span>
-    
-
-    
-    
-
-    <span class="post-tags">
-      <i class="icon-tags"></i>
-        <a href="/tags/devops/">devops</a><a href="/tags/saltstack/">saltstack</a><a href="/tags/salt/">salt</a>
-    </span>
-    
-
-    </div>
-
-    
-    <div class="article-meta pull-right">
-      <span>
-        <i class="icon-comments"></i>
-        <span>
-          <a href="/2014/06/14/saltstack-service/#comment">评论</a>
         </span>
       </span>
     </div>
